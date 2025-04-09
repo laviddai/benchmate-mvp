@@ -52,6 +52,7 @@ pyproj
 pyqtgraph
 PyQt6
 pyro-ppl
+pytest
 PyWavelets
 pyyaml
 rasterio
