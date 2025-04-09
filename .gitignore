@@ -1,3 +1,86 @@
+# --- Python (Backend) ---
 __pycache__/
-*.pyc
-.env              # sensitive environment variables
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+.env
+.env.*               # .env.dev, .env.prod, etc.
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# SQLite DBs (if used)
+*.sqlite3
+*.db
+
+# Jupyter Notebooks (optional)
+.ipynb_checkpoints/
+
+# FastAPI/Uvicorn
+*.pid
+*.cache/
+
+# --- Config Files ---
+# Keep .yaml and .json unless they're local/private/generated
+# Example of ignoring specific sensitive ones:
+# config/local_settings.yaml
+# secrets.json
+
+# --- React (Frontend) ---
+node_modules/
+build/
+dist/
+*.log
+.cache/
+*.lock
+.vite/
+.next/
+out/
+
+# React env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Yarn/npm logs
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+
+# --- Docker ---
+.docker/
+docker-compose.override.yml
+**/Dockerfile
+**/Dockerfile.*
+**/docker-compose*.yml
+*.tar               # If you're saving images as tarballs
+*.img
+*.container
+
+# Optional: ignore volume/data dirs (e.g. bind mounts)
+docker-data/
+volumes/
+tmp/
+
+# --- System/OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Editor/IDE ---
+.vscode/
+.idea/
+*.sublime-workspace
