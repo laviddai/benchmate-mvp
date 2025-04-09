@@ -48,21 +48,20 @@ BENCHMATE-MVP
 │   │   └── src
 │   │       ├── components
 │   │       └── app.js
-│   └──  packages-json
+│   └── packages-json
 │       ├── benchsocial
 │       ├── benchtop
-│       │   │   └── biology
-│       │   │       ├── calcium_imaging
-│       │   │       ├── electrophysiology
-│       │   │       ├── flow_cytometry
-│       │   │       ├── imaging
-│       │   │       ├── medical
-│       │   │       └── omics
-│       │   │           ├── metabolomics
-│       │   │           ├── proteomics
-│       │   │           └── transcriptomics
-│       │   │               └── bulk_rna_seq
-│       ├── benchsocial
+│       │   └── biology
+│       │       ├── calcium_imaging
+│       │       ├── electrophysiology
+│       │       ├── flow_cytometry
+│       │       ├── imaging
+│       │       ├── medical
+│       │       └── omics
+│       │           ├── metabolomics
+│       │           ├── proteomics
+│       │           └── transcriptomics
+│       │               └── bulk_rna_seq
 │       └── shared
 ├── .gitignore
 └── README.md
