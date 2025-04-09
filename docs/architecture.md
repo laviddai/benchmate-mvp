@@ -31,6 +31,19 @@ BENCHMATE-MVP
 │   │   └── utils
 │   │       ├── benchsocial
 │   │       ├── benchtop
+│   │   │   ├── benchtop
+│   │   │   │   └── biology
+│   │   │   │       ├── calcium_imaging
+│   │   │   │       ├── electrophysiology
+│   │   │   │       ├── flow_cytometry
+│   │   │   │       ├── imaging
+│   │   │   │       ├── medical
+│   │   │   │       └── omics
+│   │   │   │           ├── metabolomics
+│   │   │   │           ├── proteomics
+│   │   │   │           └── transcriptomics
+│   │   │   │               └── bulk_rna_seq
+│   │   │   │                   └── bulk_rna_seq_volcano.py
 │   │       └── README.md
 │   ├── main.py
 │   └── requirements.txt
