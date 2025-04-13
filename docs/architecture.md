@@ -9,16 +9,16 @@ BENCHMATE-MVP # Root project folder
 │   │   │   ├── benchtop
 │   │   │   │   ├── homepage.yaml
 │   │   │   │   └── biology
-│   │   |   │       ├── calcium-imaging
+│   │   |   │       ├── calcium_imaging
 │   │   |   │       ├── electrophysiology
-│   │   |   │       ├── flow-cytometry
+│   │   |   │       ├── flow_cytometry
 │   │   |   │       ├── imaging
 │   │   |   │       ├── medical
 │   │   |   │       └── omics
 │   │   |   │           ├── metabolomics
 │   │   |   │           ├── proteomics
 │   │   |   │           └── transcriptomics
-│   │   |   │               └── bulk-rna-seq
+│   │   |   │               └── bulk_rna_seq
 │   │   |   │                   └── volcano.yaml
 │   │   │   ├── homepage.yaml
 │   │   │   ├── README.md
@@ -27,16 +27,16 @@ BENCHMATE-MVP # Root project folder
 │   │   │   ├── benchsocial
 │   │   │   ├── benchtop
 │   │   │   │   └── biology
-│   │   │   │       ├── calcium-imaging
+│   │   │   │       ├── calcium_imaging
 │   │   │   │       ├── electrophysiology
-│   │   │   │       ├── flow-cytometry
+│   │   │   │       ├── flow_cytometry
 │   │   │   │       ├── imaging
 │   │   │   │       ├── medical
 │   │   │   │       └── omics
 │   │   │   │           ├── metabolomics
 │   │   │   │           ├── proteomics
 │   │   │   │           └── transcriptomics
-│   │   │   │               └── bulk-rna-seq
+│   │   │   │               └── bulk_rna_seq
 │   │   │   │                   └── volcano.py
 │   │   │   ├── integration
 │   │   │   └── README.md
@@ -44,7 +44,7 @@ BENCHMATE-MVP # Root project folder
 │   │       ├── benchsocial
 │   │       ├── benchtop
 │   │       │   └── biology
-│   │       │       ├── calcium-imaging
+│   │       │       ├── calcium_imaging
 │   │       │       ├── electrophysiology
 │   │       │       ├── flow-cytometry
 │   │       │       ├── imaging
@@ -54,8 +54,8 @@ BENCHMATE-MVP # Root project folder
 │   │       │           ├── proteomics
 │   │       │           └── transcriptomics
 │   │       │               └── bulk-rna-seq
-│   │       │                   └── volcano-processor.py
-│   │       ├── config-loader.py
+│   │       │                   └── volcano_processor.py
+│   │       ├── config_loader.py
 │   │       └── README.md
 │   ├── main.py
 │   └── requirements.txt # List of Python packages specific to the backend
@@ -77,16 +77,16 @@ BENCHMATE-MVP # Root project folder
 │       ├── benchsocial
 │       ├── benchtop
 │       │   └── biology
-│       │       ├── calcium-imaging
+│       │       ├── calcium_imaging
 │       │       ├── electrophysiology
-│       │       ├── flow-cytometry
+│       │       ├── flow_cytometry
 │       │       ├── imaging
 │       │       ├── medical
 │       │       └── omics
 │       │           ├── metabolomics
 │       │           ├── proteomics
 │       │           └── transcriptomics
-│       │               └── bulk-rna-seq
+│       │               └── bulk_rna_seq
 │       └── shared
 ├── tests
 │   ├── backend
