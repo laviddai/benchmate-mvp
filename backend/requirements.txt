@@ -53,6 +53,7 @@ pyqtgraph
 PyQt6
 pyro-ppl
 pytest
+python-multipart
 PyWavelets
 pyyaml
 rasterio

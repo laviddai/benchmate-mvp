@@ -1,29 +1,3 @@
-tools:
-- description: Identify differentially expressed genes from bulk RNA-seq data.
-  file_types:
-  - csv
-  - tsv
-  - xlsx
-  - xls
-  function: run_volcano_tool
-  name: Volcano Plot
-  path: streamlit_app/pages/biology/omics/transcriptomics/bulk_rna_seq/bulk_rna_seq_volcano.py
-  tags:
-  - omics
-  - transcriptomics
-  - volcano
-  - gene expression
-  technique: Bulk RNA-seq
-
-- description: Visualize single-cell RNA-seq clusters using UMAP dimensionality reduction.
-  file_types:
-  - h5ad
-  function: run_umap_tool
-  name: UMAP Plot
-  path: streamlit_app/pages/biology/omics/transcriptomics/scRNA_seq/scrna-seq_umap.py
-  tags:
-  - scRNA-seq
-  - dimensionality reduction
-  - clustering
-  - UMAP
-  technique: scRNA-seq
+# backend/app/config/homepage.yaml
+title: "BenchMate Platform"
+welcome_message: "Welcome to BenchMate." # overarching platform messages, social links, or navigation elements that connect different parts of BenchMate

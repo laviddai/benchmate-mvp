@@ -1,4 +1,4 @@
-# backend/app/utils/benchtop/biology/omics/transcriptomics/bulk-rna-seq/volcano-processor.py
+# backend/app/utils/benchtop/biology/omics/transcriptomics/bulk_rna_seq/volcano-processor.py
 
 import pandas as pd
 import numpy as np

@@ -1,43 +1,42 @@
+# backend/app/config/benchtop/biology/omics/transcriptomics/bulk-rna-seq/volcano.yaml
 expected_columns:
-  gene_name: gene
-  log2fc: log2FoldChange
-  pvalue: pvalue
-default_plot: volcano
+  gene: "gene"
+  log2fc: "log2foldchange"  # Default expected fold change column name; may be overridden.
+  pvalue: "pvalue"         # Default expected p-value column name.
+default_plot: "volcano"
 available_plots:
-  - volcano
-  - heatmap
-  - table
+  - "volcano"
 thresholds:
-  log2fc: [-1.0, 1.0]        # Default log2 fold change range; these defaults are used unless overridden by user-defined axis settings.
-  pvalue: 0.05               # Default p-value threshold (for -log10 transformation)
+  log2fc: 1.0
+  pvalue: 0.05
 colors:
-  up: "#FF0000"             # Color for upregulated genes
-  down: "#0000FF"           # Color for downregulated genes
-  neutral: "#B0B0B0"        # Color for neutral genes
+  up: "#FF0000"
+  down: "#0000FF"
+  neutral: "#B0B0B0"
 legend:
   labels:
     up: "Upregulated"
     down: "Downregulated"
     neutral: "No Change"
   title: "Regulation"
-  position: "best"          # Default legend position
+  position: "best"
 axis:
-  x_min: -5.0               # Default x-axis minimum value
-  x_max: 5.0                # Default x-axis maximum value
-  y_min: 0.0                # Default y-axis minimum value
-  y_max: 10.0               # Default y-axis maximum value
-  log_scale_y: false        # Default scale for y-axis (false = linear)
+  x_min: -5.0
+  x_max: 5.0
+  y_min: 0.0
+  y_max: 10.0
+  log_scale_y: false
 layout:
-  add_footer: true          # Include a footer with group and threshold info
-  show_grid: true           # Display grid on the plot
-  plot_width: 8             # Default plot width (in inches or arbitrary units)
-  plot_height: 6            # Default plot height
-  show_borders: false       # Do not display top/right plot borders by default
+  add_footer: true
+  show_grid: true
+  plot_width: 8
+  plot_height: 6
+  show_borders: false
 auto_label:
-  top_n_up: 0               # No auto-labeling by default for upregulated genes
-  top_n_down: 0             # No auto-labeling by default for downregulated genes
+  top_n_up: 0
+  top_n_down: 0
 graph:
-  title: "Volcano Plot"     # Default graph title
+  title: "Volcano Plot"
 metadata:
   organism: "Homo sapiens"
   tissue: "colon"

@@ -1,1 +1,13 @@
-# To be filled
+# backend/app/config/benchtop/homepage.yaml
+title: "BenchTop"
+welcome_message: "Welcome to BenchTop, the analysis suite of BenchMate."
+
+tools:
+  - name: "Volcano Plot"
+    technique: "Bulk RNA-seq"
+    description: "Identify differentially expressed genes using volcano plot analysis."
+    file_types:
+      - csv
+      - tsv
+      - xlsx
+      - xls
