@@ -45,7 +45,18 @@ async def run_volcano(
             mapping["gene"] = gene_col
         
         # Preprocess the data. Mapping is applied if non-empty.
-        df_processed = preprocess_data(df, mapping=mapping if mapping else None)
+                try:
+            df_processed = preprocess_data(df, mapping=mapping if mapping else None)
+        except ValueError as ve:
+            # Return an informative error response so the frontend can ask the user for mapping.
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": "Missing required columns",
+                    "details": str(ve),
+                    "available_columns": df.columns.tolist()
+                }
+            )
         
         # Load volcano tool configuration from YAML.
         # Adjust the path if necessary (here, relative to the project root).
