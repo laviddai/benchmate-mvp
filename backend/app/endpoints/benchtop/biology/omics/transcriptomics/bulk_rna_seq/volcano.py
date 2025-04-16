@@ -45,7 +45,7 @@ async def run_volcano(
             mapping["gene"] = gene_col
         
         # Preprocess the data. Mapping is applied if non-empty.
-                try:
+        try:
             df_processed = preprocess_data(df, mapping=mapping if mapping else None)
         except ValueError as ve:
             # Return an informative error response so the frontend can ask the user for mapping.

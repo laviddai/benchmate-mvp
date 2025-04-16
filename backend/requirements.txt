@@ -10,6 +10,7 @@ catboost
 cellpose
 cmdstanpy
 csbdeep
+czifile
 dash
 earthpy
 elephant
@@ -56,6 +57,7 @@ pytest
 python-multipart
 PyWavelets
 pyyaml
+qtpy
 rasterio
 scanpy
 scikit-image
