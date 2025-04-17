@@ -1,7 +1,7 @@
 // frontend/benchtop/src/pages/biology/omics/transcriptomics/bulk_rna_seq/volcano.js
 import React, { useState } from 'react';
-import ColumnMapping from '../../../components/common/ColumnMapping';
-import { submitVolcanoData } from '../../../services/biology/omics/transcriptomics/bulk_rna_seq/volcanoapi';
+import ColumnMapping from '../../../../../components/common/column_mapping';
+import { submitVolcanoData } from '../../../../../services/biology/omics/transcriptomics/bulk_rna_seq/volcanoapi';
 
 const Volcano = () => {
   const [file, setFile] = useState(null);
