@@ -1,0 +1,46 @@
+###############################################################################
+#  BenchMate – Local development stack
+#
+#  Start with:   docker compose up --build
+#
+#  Services
+#  --------
+#  • backend:  builds from backend/Dockerfile, reloads on code change
+#  • frontend: uses Node 18 Alpine; runs `npm start` for hot-reload
+#  • redis:    placeholder for future job queue (ImageJ/Fiji tasks)
+###############################################################################
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: benchmate_backend
+    # Mount code so changes appear instantly in the container
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8000:8000"
+    # Use reload mode for development
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    image: node:18-alpine
+    container_name: benchmate_frontend
+    working_dir: /usr/src/app
+    # Mount the frontend source code for live edits
+    volumes:
+      - ./frontend/benchtop:/usr/src/app
+    ports:
+      - "3000:3000"
+    # Install dependencies then start the React dev server
+    command: sh -c "npm install && npm start"
+
+  redis:
+    image: redis:7-alpine
+    container_name: benchmate_redis
+    ports:
+      - "6379:6379"
