@@ -61,21 +61,6 @@ yarn-debug.log*
 yarn-error.log*
 npm-debug.log*
 
-# --- Docker ---
-.docker/
-docker-compose.override.yml
-**/Dockerfile
-**/Dockerfile.*
-**/docker-compose*.yml
-*.tar               # If you're saving images as tarballs
-*.img
-*.container
-
-# Optional: ignore volume/data dirs (e.g. bind mounts)
-docker-data/
-volumes/
-tmp/
-
 # --- System/OS Files ---
 .DS_Store
 Thumbs.db
