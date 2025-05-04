@@ -1,34 +1,22 @@
 {
   // ------------------------------------------------------------------
   //  BenchMate Codespaces container definition
-  //
-  //  • Builds from the local Dockerfile (see below) so we can layer in
-  //    system‑level packages whenever needed (e.g. Java for Fiji).
-  //  • Installs Python & Node project dependencies after the container
-  //    is created so every developer starts from the same environment.
-  //  • Forwards the React dev server (3000) and FastAPI (8000) ports to
-  //    the Codespaces preview panel / localhost.
   // ------------------------------------------------------------------
   "name": "BenchMate Dev Space",
 
-  // Build instructions come from Dockerfile in this same folder
+  // Build from local Dockerfile
   "build": { "dockerfile": "Dockerfile" },
 
-  // Adds Docker‑in‑Docker feature so you can build & run Docker
-  // images (e.g. Fiji) from inside the Codespace.
+  // Docker‑in‑Docker feature (so you can build the Fiji image later)
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
-  // Commands that run once, right after the container boots
-  "postCreateCommand": [
-    // Install backend Python dependencies
-    "pip install -r backend/requirements_biology.txt",
-    // Install frontend Node dependencies
-    "npm install --prefix frontend/benchtop"
-  ],
+  // Runs once after the container is created.  Two commands are chained
+  // with && so the second only runs if the first succeeds.
+  "postCreateCommand": "/bin/bash -c 'pip install -r backend/requirements_biology.txt && npm install --prefix frontend/benchtop'",
 
-  // VS Code extensions and editor settings recommended for this repo
+  // Recommended editor extensions and settings
   "customizations": {
     "vscode": {
       "extensions": [
@@ -44,6 +32,6 @@
     }
   },
 
-  // Ports that should be exposed to the Codespaces UI
+  // Forward React (3000) and FastAPI (8000)
   "forwardPorts": [3000, 8000]
 }
