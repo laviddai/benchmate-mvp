@@ -1,63 +1,56 @@
 # tests/backend/test_volcano_processor.py
 
 import os
+import pandas as pd
+import pytest
+
 from backend.app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.volcano_processor import (
     load_data,
     preprocess_data,
     plot_volcano,
     fig_to_base64,
 )
-import pandas as pd
 
-# Compute path to the bundled sample in tests/data
-here = os.path.dirname(__file__)
-sample_file = os.path.join(here, os.pardir, "data", "sample_bulk_rna.xlsx")
-ext = os.path.splitext(sample_file)[1]
+@pytest.fixture
+def sample_df():
+    # Locate the bundled sample data file
+    here = os.path.dirname(__file__)
+    sample_path = os.path.abspath(os.path.join(here, os.pardir, "data", "sample_bulk_rna.xlsx"))
+    with open(sample_path, "rb") as f:
+        df = load_data(f, ".xlsx")
+    return df
 
-# Load the file
-with open(sample_file, "rb") as f:
-    df = load_data(f, ext)
+def test_load_data(sample_df):
+    # Ensure the DataFrame loaded has rows and expected columns
+    assert not sample_df.empty
+    for col in ["gene", "fold_change", "p_value"]:
+        assert col in sample_df.columns
 
-# Optional: print the columns after cleaning to debug the mapping
-df.columns = df.columns.str.strip().str.lower()
-print("Detected columns:", df.columns.tolist())
+def test_preprocess_and_plot(sample_df):
+    # Map your sample’s headers to the processor’s defaults
+    df_processed = preprocess_data(
+        sample_df,
+        mapping={"pvalue": "p_value", "log2fc": "fold_change"}
+    )
+    # After preprocessing you should have the composite score column
+    assert "composite_score" in df_processed.columns
 
-# Define expected column names based on your file.
-# For example, if your file headers are "gene", "fold_change", "p_value" (after cleaning, they become "gene", "fold_change", "p_value")
-# And your defaults expect "gene", "log2foldchange", and "pvalue", then specify a mapping.
-mapping = {
-    "log2fc": "fold_change",  # if your fold-change column is named 'fold_change'
-    "pvalue": "p_value"       # if your p-value column is named 'p_value'
-}
-
-# Preprocess the data with the mapping (if needed)
-try:
-    df_processed = preprocess_data(df, mapping=mapping)
-    print("Preprocessing successful. New columns added:", ["-log10_y", "composite_score"])
-except Exception as e:
-    print("Error in preprocessing:", e)
-
-# Now generate the volcano plot.
-# Adjust parameters (like thresholds) according to your sample data.
-try:
+    # Generate a volcano plot
     fig = plot_volcano(
         df=df_processed,
-        label_genes=[],  # You may set a list of genes to label as needed.
-        title="Test Volcano Plot",
+        label_genes=[],
+        title="Test Volcano",
         xlabel="Log2 Fold Change",
         ylabel="-Log10(P-value)",
-        x_col="log2foldchange",  # this should match the key in your mapping or defaults
-        y_col="p_value",         # should match, considering our mapping
+        x_col="log2foldchange",
+        y_col="p_value",
         gene_col="gene",
         fc_thresh=1.0,
         pval_thresh=0.05,
         legend_title="Regulation",
         show_threshold_line=True,
-        footer_text="Test Footer"
+        footer_text="Footer"
     )
-    # Convert the plot to a base64 string.
-    b64_str = fig_to_base64(fig)
-    print("Plot successfully generated and converted to base64:")
-    print(b64_str[:200])  # Print the first 200 characters for inspection
-except Exception as e:
-    print("Error generating plot:", e)
+    # Convert to base64 and assert we got a string back
+    b64 = fig_to_base64(fig)
+    assert isinstance(b64, str) and b64.startswith("data:image/png;base64,")
