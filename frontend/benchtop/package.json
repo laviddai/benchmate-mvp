@@ -38,7 +38,7 @@
   },
 
   "overrides": {
-    "ansi-regex": "^6.0.1",
+    "ansi-regex": "^5.0.1",
     "nth-check": "^2.0.1",
     "css-select": "^4.0.0",
     "svgo": "^2.8.0",
