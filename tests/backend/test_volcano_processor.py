@@ -10,7 +10,7 @@ from backend.app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.volca
 import pandas as pd
 
 # Path to your sample Excel file (update the path if necessary)
-sample_file = r"C:\Users\Lenovo\Desktop\BenchMate Files\CAGRF221112648-Mutant.Gut.GFPpos_v_Control.Gut.GFPpos-all_genes.xlsx"
+sample_file = r"C:\Users\Lenovo\Desktop\benchmate_mvp\tests\data\CAGRF221112648-Mutant.Gut.GFPpos_v_Control.Gut.GFPpos-all_genes.xlsx"
 ext = ".xlsx"
 
 # Load the file
