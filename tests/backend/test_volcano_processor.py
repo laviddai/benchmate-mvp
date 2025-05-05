@@ -9,9 +9,10 @@ from backend.app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.volca
 )
 import pandas as pd
 
-# Path to your sample Excel file (update the path if necessary)
-sample_file = r"C:\Users\Lenovo\Desktop\benchmate_mvp\tests\data\CAGRF221112648-Mutant.Gut.GFPpos_v_Control.Gut.GFPpos-all_genes.xlsx"
-ext = ".xlsx"
+# Compute path to the bundled sample in tests/data
+here = os.path.dirname(__file__)
+sample_file = os.path.join(here, os.pardir, "data", "sample_bulk_rna.xlsx")
+ext = os.path.splitext(sample_file)[1]
 
 # Load the file
 with open(sample_file, "rb") as f:
