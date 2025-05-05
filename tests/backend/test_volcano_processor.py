@@ -22,37 +22,53 @@ def sample_df():
         df = load_data(f, ".xlsx")
     return df
 
-def test_load_data(sample_df):
+def test_default_mapping_works(sample_df):
     """
-    Verify that load_data returns a DataFrame with the sample's raw columns.
+    With no mapping, preprocess_data should still locate columns
+    named like 'gene', 'p_value', 'log2foldchange', etc.
     """
-    assert not sample_df.empty, "Sample DataFrame should not be empty"
-    for col in ["Gene", "logFC", "PValue"]:
-        assert col in sample_df.columns, f"Expected column {col} in DataFrame"
+    # This assumes your sample data has at least one of the synonyms
+    # defined in preprocess_data's defaults (e.g. 'PValue', 'logFC', 'Gene').
+    df_processed = preprocess_data(sample_df)
+    # It must compute the composite score
+    assert "composite_score" in df_processed.columns
 
-def test_preprocess_and_plot(sample_df):
+def test_explicit_mapping_works(sample_df):
     """
-    Run preprocessing with explicit column mappings, then plot.
+    Override the default synonyms via the mapping argument;
+    verify that preprocess_data picks up the exact names you give.
     """
-    # In production your API will accept these names from the user
-    df_processed = preprocess_data(
-        sample_df,
-        pvalue_col="PValue",
-        log2fc_col="logFC",
-        gene_col="Gene"
-    )
+    # Suppose our sample has headers "PValue", "logFC", "Gene"
+    mapping = {
+        "pvalue": "PValue",
+        "log2fc": "logFC",
+        "gene": "Gene"
+    }
+    df_processed = preprocess_data(sample_df, mapping=mapping)
 
-    # Check that a derived score or similar column appears
-    score_cols = [c for c in df_processed.columns if "score" in c.lower()]
-    assert score_cols, "Preprocessed DataFrame should contain a 'score' column"
+    # After mapping, composite_score must still be present
+    assert "composite_score" in df_processed.columns
 
-    # Generate a volcano plot with user-specified axes
+def test_plot_and_base64(sample_df):
+    """
+    Finally, generate a plot with explicit mapping and
+    check that the base64-encoded PNG URI is returned.
+    """
+    mapping = {
+        "pvalue": "PValue",
+        "log2fc": "logFC",
+        "gene": "Gene"
+    }
+    df_processed = preprocess_data(sample_df, mapping=mapping)
+
     fig = plot_volcano(
         df=df_processed,
         label_genes=[],
         title="Test Volcano",
         xlabel="Log2 Fold Change",
         ylabel="-Log10 P-Value",
+        # Notice: plot_volcano takes the **actual** column names here,
+        # since you’ve already told preprocess_data which they are.
         x_col="logFC",
         y_col="PValue",
         gene_col="Gene",
@@ -63,6 +79,5 @@ def test_preprocess_and_plot(sample_df):
         footer_text="Footer"
     )
 
-    # Convert to base64 and assert a valid data URI
     b64 = fig_to_base64(fig)
-    assert isinstance(b64, str) and b64.startswith("data:image/png;base64,"), "Expected a base64 PNG data URI"
+    assert isinstance(b64, str) and b64.startswith("data:image/png;base64,")
