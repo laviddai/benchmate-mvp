@@ -6,8 +6,8 @@ from io import BytesIO
 import os
 
 # Import the config loader and volcano processor functions.
-from backend.app.utils.config_loader import load_yaml_config
-from backend.app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.volcano_processor import (
+from app.utils.config_loader import load_yaml_config
+from app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.volcano_processor import (
     load_data, preprocess_data, plot_volcano, fig_to_base64
 )
 

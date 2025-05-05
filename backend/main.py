@@ -1,7 +1,7 @@
 # FastAPI application entry point and mounting endpoint: backend/main.py
 
 from fastapi import FastAPI
-from backend.app.endpoints.benchtop.biology.omics.transcriptomics.bulk_rna_seq import volcano
+from app.endpoints.benchtop.biology.omics.transcriptomics.bulk_rna_seq import volcano
 
 app = FastAPI(title="BenchMate Backend API")
 

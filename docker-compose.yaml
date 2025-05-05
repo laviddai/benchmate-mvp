@@ -6,10 +6,10 @@
 #  Services
 #  --------
 #  • backend:  builds from backend/Dockerfile, reloads on code change
-#  • frontend: uses Node 18 Alpine; runs `npm start` for hot-reload
+#  • frontend: uses Node 18 Alpine; runs `react-scripts start` with the proper
+#              NODE_OPTIONS on Linux so the dev server stays alive
 #  • redis:    placeholder for future job queue (ImageJ/Fiji tasks)
 ###############################################################################
-version: "3.9"
 
 services:
   backend:
@@ -17,27 +17,38 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: benchmate_backend
-    # Mount code so changes appear instantly in the container
     volumes:
       - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
     ports:
       - "8000:8000"
-    # Use reload mode for development
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command:
+      - uvicorn
+      - main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload
 
   frontend:
     image: node:18-alpine
     container_name: benchmate_frontend
     working_dir: /usr/src/app
-    # Mount the frontend source code for live edits
+    # 1) Set NODE_OPTIONS (no cross-env needed)
+    environment:
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - CHOKIDAR_USEPOLLING=true   # improves file-watch reliability in Docker
     volumes:
+      # Your source code
       - ./frontend/benchtop:/usr/src/app
+      # Isolate the container’s node_modules
+      - /usr/src/app/node_modules
     ports:
       - "3000:3000"
-    # Install dependencies then start the React dev server
-    command: sh -c "npm install && npm start"
+    # 2) Install deps, then exec the React server so it becomes PID 1
+    command: sh -c "npm install && exec npx react-scripts start --host 0.0.0.0"
 
   redis:
     image: redis:7-alpine
