@@ -1,6 +1,6 @@
+# .github/workflows/ci.yaml
 name: CI
 
-# Run on pushes to main and on all pull requests
 on:
   push:
     branches: [ main ]
@@ -23,7 +23,8 @@ jobs:
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements_biology.txt
+          # Install both your biology libs and the test runner
+          pip install -r backend/requirements_biology.txt pytest
 
       - name: Run pytest
         run: |
