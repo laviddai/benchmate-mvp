@@ -108,6 +108,14 @@ def plot_volcano(
     """
     # Prepare a copy to avoid modifying the original DataFrame
     df = df.copy()
+    # ————————————————
+    # Normalize for case-insensitive column lookup
+    df.columns = df.columns.str.strip().str.lower()
+    x_col = x_col.strip().lower()
+    y_col = y_col.strip().lower()
+    gene_col = gene_col.strip().lower()
+    # ————————————————
+    
     # Classify regulation states
     df["regulation"] = "neutral"
     df.loc[(df[x_col] >= fc_thresh) & (df[y_col] <= pval_thresh), "regulation"] = "up"
