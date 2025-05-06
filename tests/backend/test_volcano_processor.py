@@ -24,41 +24,28 @@ def sample_df():
 
 def test_default_mapping_works(sample_df):
     """
-    With no mapping, preprocess_data should still locate columns
-    named like 'gene', 'p_value', 'log2foldchange', etc.
+    Without specifying column names, preprocess_data should
+    locate columns using its built-in synonyms and produce
+    a composite_score column.
     """
-    # This assumes your sample data has at least one of the synonyms
-    # defined in preprocess_data's defaults (e.g. 'PValue', 'logFC', 'Gene').
     df_processed = preprocess_data(sample_df)
-    # It must compute the composite score
     assert "composite_score" in df_processed.columns
 
 def test_explicit_mapping_works(sample_df):
     """
-    Override the default synonyms via the mapping argument;
-    verify that preprocess_data picks up the exact names you give.
+    When the user provides their own column names mapping,
+    preprocess_data must honor them.
     """
-    # Suppose our sample has headers "PValue", "logFC", "Gene"
-    mapping = {
-        "pvalue": "PValue",
-        "log2fc": "logFC",
-        "gene": "Gene"
-    }
+    mapping = {"pvalue": "PValue", "log2fc": "logFC", "gene": "Gene"}
     df_processed = preprocess_data(sample_df, mapping=mapping)
-
-    # After mapping, composite_score must still be present
     assert "composite_score" in df_processed.columns
 
 def test_plot_and_base64(sample_df):
     """
-    Finally, generate a plot with explicit mapping and
-    check that the base64-encoded PNG URI is returned.
+    Generate a volcano plot using explicit column names,
+    then convert to a base64 data URI.
     """
-    mapping = {
-        "pvalue": "PValue",
-        "log2fc": "logFC",
-        "gene": "Gene"
-    }
+    mapping = {"pvalue": "PValue", "log2fc": "logFC", "gene": "Gene"}
     df_processed = preprocess_data(sample_df, mapping=mapping)
 
     fig = plot_volcano(
@@ -67,8 +54,6 @@ def test_plot_and_base64(sample_df):
         title="Test Volcano",
         xlabel="Log2 Fold Change",
         ylabel="-Log10 P-Value",
-        # Notice: plot_volcano takes the **actual** column names here,
-        # since you’ve already told preprocess_data which they are.
         x_col="logFC",
         y_col="PValue",
         gene_col="Gene",
@@ -79,21 +64,7 @@ def test_plot_and_base64(sample_df):
         footer_text="Footer"
     )
 
-    def fig_to_base64(fig):
-        """
-        Convert a Matplotlib figure to a data URI with base64-encoded PNG.
-        """
-        # 1. Render the figure into an in-memory buffer
-        buf = io.BytesIO()
-        fig.savefig(buf, format="png", bbox_inches="tight")
-        buf.seek(0)
-
-        # 2. Read the raw bytes and base64-encode them
-        img_bytes = buf.read()
-        base64_str = base64.b64encode(img_bytes).decode("utf-8")
-
-        # 3. Prepend the data-URI header so this string can be used directly
-        #    as an <img src="…"> in HTML or returned as a JSON field.
-        return f"data:image/png;base64,{base64_str}"
-
-    assert isinstance(b64, str) and b64.startswith("data:image/png;base64,")
+    b64 = fig_to_base64(fig)
+    # Must be a string and include the data URI prefix
+    assert isinstance(b64, str)
+    assert b64.startswith("data:image/png;base64,")
