@@ -80,20 +80,20 @@ def test_plot_and_base64(sample_df):
     )
 
     def fig_to_base64(fig):
-    """
-    Convert a Matplotlib figure to a data URI with base64-encoded PNG.
-    """
-    # 1. Render the figure into an in-memory buffer
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight")
-    buf.seek(0)
+        """
+        Convert a Matplotlib figure to a data URI with base64-encoded PNG.
+        """
+        # 1. Render the figure into an in-memory buffer
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight")
+        buf.seek(0)
 
-    # 2. Read the raw bytes and base64-encode them
-    img_bytes = buf.read()
-    base64_str = base64.b64encode(img_bytes).decode("utf-8")
+        # 2. Read the raw bytes and base64-encode them
+        img_bytes = buf.read()
+        base64_str = base64.b64encode(img_bytes).decode("utf-8")
 
-    # 3. Prepend the data-URI header so this string can be used directly
-    #    as an <img src="…"> in HTML or returned as a JSON field.
-    return f"data:image/png;base64,{base64_str}"
+        # 3. Prepend the data-URI header so this string can be used directly
+        #    as an <img src="…"> in HTML or returned as a JSON field.
+        return f"data:image/png;base64,{base64_str}"
 
     assert isinstance(b64, str) and b64.startswith("data:image/png;base64,")
