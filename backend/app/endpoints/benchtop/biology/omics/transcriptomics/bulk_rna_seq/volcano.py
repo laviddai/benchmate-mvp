@@ -1,105 +1,94 @@
 # backend/app/endpoints/benchtop/biology/omics/transcriptomics/bulk_rna_seq/volcano.py
 
+import os
+from io import BytesIO
+
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
-from io import BytesIO
-import os
 
-# Import the config loader and volcano processor functions.
+from app.schemas.volcano import VolcanoParams, VolcanoResponse
 from app.utils.config_loader import load_yaml_config
 from app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.volcano_processor import (
-    load_data, preprocess_data, plot_volcano, fig_to_base64
+    load_data,
+    preprocess_data,
+    plot_volcano,
+    fig_to_base64
 )
 
 router = APIRouter()
 
-@router.post("/run", summary="Run Volcano Plot Tool")
+@router.post(
+    "/run",
+    response_model=VolcanoResponse,
+    summary="Run Volcano Plot Tool",
+    description=(
+        "Accepts an uploaded file along with optional column‐mapping form fields. "
+        "Returns a base64‐encoded PNG and summary statistics."
+    ),
+)
 async def run_volcano(
     file: UploadFile = File(...),
     pvalue_col: str = Form(None),
     log2fc_col: str = Form(None),
-    gene_col: str = Form(None)
+    gene_col: str = Form(None),
 ):
     """
     API endpoint to process a volcano plot tool.
-    Accepts an uploaded file and optional column mapping overrides.
-    Returns a JSON with a base64-encoded plot and summary statistics.
     """
-    try:
-        # Read file content as bytes.
-        contents = await file.read()
-        file_stream = BytesIO(contents)
-        _, ext = os.path.splitext(file.filename)
-        ext = ext.lower()
+    # 1. Validate form fields via Pydantic
+    params = VolcanoParams(
+        pvalue_col=pvalue_col,
+        log2fc_col=log2fc_col,
+        gene_col=gene_col,
+    )
 
-        # Load data using the processor function.
-        df = load_data(file_stream, ext)
-        
-        # Create mapping from form parameters if provided.
-        mapping = {}
-        if pvalue_col:
-            mapping["pvalue"] = pvalue_col
-        if log2fc_col:
-            mapping["log2fc"] = log2fc_col
-        if gene_col:
-            mapping["gene"] = gene_col
-        
-        # Preprocess the data. Mapping is applied if non-empty.
-        try:
-            df_processed = preprocess_data(df, mapping=mapping if mapping else None)
-        except ValueError as ve:
-            # Return an informative error response so the frontend can ask the user for mapping.
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "error": "Missing required columns",
-                    "details": str(ve),
-                    "available_columns": df.columns.tolist()
-                }
-            )
-        
-        # Load volcano tool configuration from YAML.
-        # Adjust the path if necessary (here, relative to the project root).
-        config = load_yaml_config("backend/app/config/benchtop/biology/omics/transcriptomics/bulk_rna_seq/volcano.yaml")
-        
-        # Generate the volcano plot.
-        fig = plot_volcano(
-            df=df_processed,
-            label_genes=[],  # Optionally, allow labeling genes.
-            title=config.get("graph", {}).get("title", "Volcano Plot"),
-            xlabel="Log2 Fold Change",
-            ylabel="-Log10(P-value)",
-            x_col=config.get("expected_columns", {}).get("log2fc", "log2foldchange"),
-            y_col=config.get("expected_columns", {}).get("pvalue", "pvalue"),
-            gene_col=config.get("expected_columns", {}).get("gene", "gene"),
-            fc_thresh=config.get("thresholds", {}).get("log2fc", 1.0),
-            pval_thresh=config.get("thresholds", {}).get("pvalue", 0.05),
-            legend_title=config.get("legend", {}).get("title", "Regulation"),
-            colors=config.get("colors", {"up": "red", "down": "blue", "neutral": "gray"}),
-            legend_labels=config.get("legend", {}).get("labels", {"up": "Up", "down": "Down", "neutral": "Neutral"}),
-            show_grid=config.get("layout", {}).get("show_grid", True),
-            legend_position=config.get("legend", {}).get("position", "best"),
-            figsize=(config.get("layout", {}).get("plot_width", 8), config.get("layout", {}).get("plot_height", 6)),
-            xlim=(config.get("axis", {}).get("x_min", -5), config.get("axis", {}).get("x_max", 5)),
-            ylim=(config.get("axis", {}).get("y_min", 0), config.get("axis", {}).get("y_max", 10)),
-            log_scale_y=config.get("axis", {}).get("log_scale_y", False),
-            show_threshold_line=True,
-            footer_text=None
+    # 2. Read & parse the uploaded file
+    try:
+        contents = await file.read()
+        stream = BytesIO(contents)
+        _, ext = os.path.splitext(file.filename)
+        df = load_data(stream, ext.lower())
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to load file: {e}")
+
+    # 3. Preprocess, applying any user‐provided mappings
+    try:
+        mapping = params.dict(exclude_none=True) or None
+        df_processed = preprocess_data(df, mapping=mapping)
+    except ValueError as ve:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "Missing required columns",
+                "details": str(ve),
+                "available_columns": df.columns.tolist(),
+            },
         )
 
-        # Convert the Matplotlib figure to base64
-        plot_base64 = fig_to_base64(fig)
+    # 4. Load plot config
+    config = load_yaml_config(
+        "benchtop/biology/omics/transcriptomics/bulk_rna_seq/volcano.yaml"
+    )
 
-        # Prepare response
-        response = {
-            "plot_image": plot_base64,
-            "summary": {
-                "total_genes": len(df),
-                "processed_genes": len(df_processed)
-            },
-            "config": config
-        }
+    # 5. Generate the volcano figure
+    fig = plot_volcano(
+        df=df_processed,
+        label_genes=[],
+        title=config.get("graph", {}).get("title", "Volcano Plot"),
+        xlabel=config.get("graph", {}).get("xlabel", "Log2 Fold Change"),
+        ylabel=config.get("graph", {}).get("ylabel", "-Log10(P-value)"),
+        x_col=params.log2fc_col or config["expected_columns"].get("log2fc", "log2foldchange"),
+        y_col=params.pvalue_col or config["expected_columns"].get("pvalue", "pvalue"),
+        gene_col=params.gene_col or config["expected_columns"].get("gene", "gene"),
+        fc_thresh=config.get("thresholds", {}).get("log2fc", 1.0),
+        pval_thresh=config.get("thresholds", {}).get("pvalue", 0.05),
+        legend_title=config.get("legend", {}).get("title", "Regulation"),
+        show_threshold_line=config.get("layout", {}).get("show_threshold_line", True),
+        footer_text=config.get("layout", {}).get("footer_text", ""),
+    )
 
-        return JSONResponse(status_code=200, content=response)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # 6. Build a minimal summary
+    summary_stats = {"n_genes": df_processed.shape[0]}
+
+    # 7. Return JSON with a data‐URI plot and stats
+    return {"plot_image": fig_to_base64(fig), "summary": summary_stats}
