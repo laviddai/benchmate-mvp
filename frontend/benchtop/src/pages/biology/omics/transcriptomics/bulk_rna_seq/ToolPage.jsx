@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { listTools, runTool } from "../../../../services/biology/omics/transcriptomics/bulk_rna_seq/bulkRnaSeqApi";
+import { listTools, runTool } from "../../../../../services/biology/omics/transcriptomics/bulk_rna_seq/bulkRnaSeqApi";
 
 export default function ToolPage() {
   const { tool } = useParams();
