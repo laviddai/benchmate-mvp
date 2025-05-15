@@ -1,7 +1,7 @@
 # backend/app/config/benchtop/biology/omics/transcriptomics/bulk-rna-seq/volcano.yaml
 expected_columns:
   gene: "gene"
-  log2fc: "log2foldchange"  # Default expected fold change column name; may be overridden.
+  log2fc: "logfc"            # Default expected fold change column name; may be overridden.
   pvalue: "pvalue"         # Default expected p-value column name.
 default_plot: "volcano"
 available_plots:
