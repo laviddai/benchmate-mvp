@@ -8,7 +8,8 @@
 #  • backend:  builds from backend/Dockerfile, reloads on code change
 #  • frontend: uses Node 18 Alpine; runs `react-scripts start` with the proper
 #              NODE_OPTIONS on Linux so the dev server stays alive
-#  • redis:    placeholder for future job queue (ImageJ/Fiji tasks)
+#  • postgres: PostgreSQL database service
+#  • redis:    for Celery job queue (async tasks)
 ###############################################################################
 
 services:
@@ -18,12 +19,20 @@ services:
       dockerfile: Dockerfile
     container_name: benchmate_backend
     volumes:
-      - ./backend:/app
+      - ./backend:/app # Mounts your local backend code into the container for live updates
     environment:
-      - PYTHONUNBUFFERED=1
+      # DATABASE_URL will be loaded by pydantic-settings from backend/.env inside the container
+      - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal
     ports:
-      - "8000:8000"
+      - "8000:8000" # Maps port 8000 on host to 8000 in container
+    depends_on:
+      postgres: # Ensures postgres service starts before backend
+        condition: service_healthy # Waits for postgres healthcheck to pass
+      redis:    # Optional: if your app initialization connects to Redis
+        condition: service_started
     command:
+      # This command runs FastAPI with Uvicorn
+      # --reload enables auto-reloading on code changes
       - uvicorn
       - main:app
       - --host
@@ -33,25 +42,56 @@ services:
       - --reload
 
   frontend:
-    image: node:18-alpine
+    image: node:18-alpine # Uses a specific Node.js image
     container_name: benchmate_frontend
-    working_dir: /usr/src/app
-    # 1) Set NODE_OPTIONS (no cross-env needed)
+    working_dir: /usr/src/app # Sets the working directory inside the container
     environment:
-      - NODE_OPTIONS=--openssl-legacy-provider
-      - CHOKIDAR_USEPOLLING=true   # improves file-watch reliability in Docker
+      - NODE_OPTIONS=--openssl-legacy-provider # Fix for certain Node.js crypto issues
+      - CHOKIDAR_USEPOLLING=true # Improves file watching in Docker for hot-reloading
+      - REACT_APP_API_BASE_URL=http://localhost:8000 # So frontend knows where backend is
     volumes:
-      # Your source code
-      - ./frontend/benchtop:/usr/src/app
-      # Isolate the container’s node_modules
-      - /usr/src/app/node_modules
+      - ./frontend/benchtop:/usr/src/app # Mounts your local frontend code
+      - /usr/src/app/node_modules # Keeps node_modules isolated in the container volume
     ports:
-      - "3000:3000"
-    # 2) Install deps, then exec the React server so it becomes PID 1
-    command: sh -c "npm install && exec npx react-scripts start --host 0.0.0.0"
+      - "3000:3000" # Maps port 3000 on host to 3000 in container
+    command: sh -c "npm install && npm start" # Installs dependencies and starts dev server
+                                              # Changed from npx react-scripts start for consistency
+                                              # npm start typically calls react-scripts start
+
+  postgres:
+    image: postgres:15-alpine # Uses a specific PostgreSQL version
+    container_name: benchmate_postgres
+    environment:
+      # These credentials will be used by your backend to connect
+      # IMPORTANT: For production, use strong, unique passwords stored securely (e.g., Docker secrets)
+      POSTGRES_USER: benchmate_user
+      POSTGRES_PASSWORD: supersecretpassword # CHANGE THIS IN A REAL SCENARIO
+      POSTGRES_DB: benchmate_db
+    volumes:
+      # This creates a named volume to persist database data
+      # even if the container is stopped or removed.
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Exposes PostgreSQL port to the host machine (optional, for external DB tools)
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benchmate_user -d benchmate_db"]
+      interval: 10s # How often to run the health check
+      timeout: 5s   # How long to wait for the check to complete
+      retries: 5    # How many times to retry before marking as unhealthy
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine # Uses a specific Redis version
     container_name: benchmate_redis
     ports:
-      - "6379:6379"
+      - "6379:6379" # Maps Redis port
+    healthcheck: # Basic healthcheck for Redis
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Defines the named volume for PostgreSQL data persistence
+volumes:
+  postgres_data:
+    # driver: local # Default driver
