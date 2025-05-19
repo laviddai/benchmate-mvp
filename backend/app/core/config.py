@@ -29,9 +29,9 @@ class Settings(BaseSettings):
 
     # Configure Pydantic-settings behavior
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
-        env_file_encoding='utf-8',
-        extra='ignore' # Ignore extra fields in .env file
+            env_file="/app/.env", # More direct path when running inside the container
+            env_file_encoding='utf-8',
+            extra='ignore'
     )
     # The os.path.join(...) constructs the path to backend/.env from backend/app/core/config.py
 
