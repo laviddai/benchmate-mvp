@@ -1,42 +1,50 @@
+# backend/main.py
 from fastapi import FastAPI
+from app.api.api_router import api_router # Import the main API router
+from app.core.config import settings # If you need settings for app config
+
+# Potentially configure CORS if your frontend is on a different domain/port during dev
 from fastapi.middleware.cors import CORSMiddleware
-import importlib
-import pkgutil
-from pathlib import Path
 
-app = FastAPI(title="BenchMate Backend API")
-
-# Enable CORS so the frontend at localhost:3000 can communicate
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # adjust in production as needed
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="BenchMate Backend API",
+    # openapi_url=f"{settings.API_V1_STR}/openapi.json" # Example if you add API versioning
 )
 
-def include_routers_from_package(app: FastAPI, package_name: str, api_prefix: str = "/api"):
-    """
-    Dynamically import all modules under the given package and include any
-    FastAPI routers they expose. Routers are expected to be named 'router'.
-    The URL prefix is constructed as api_prefix + '/' + path segments of the module.
-    e.g., module 'app.endpoints.benchtop.biology.volcano' => '/api/benchtop/biology/volcano'
-    """
-    package = importlib.import_module(package_name)
-    package_path = Path(package.__file__).parent
+# CORS (Cross-Origin Resource Sharing)
+# Allows your frontend (e.g., localhost:3000) to make requests to your backend (e.g., localhost:8000)
+# Adjust origins as needed, "*" is permissive for development.
+# For production, specify exact origins.
+origins = [
+    "http://localhost:3000", # Your React frontend
+    "http://localhost",      # Sometimes needed
+    # Add your deployed frontend URL here later
+]
 
-    for finder, module_name, ispkg in pkgutil.walk_packages([str(package_path)], package_name + "."):
-        module = importlib.import_module(module_name)
-        if hasattr(module, "router"):
-            # derive URL path by stripping the base package and the module name
-            rel_path = module_name[len(package_name) + 1:]
-            parts = rel_path.split('.')
-            prefix = api_prefix + '/' + '/'.join(parts[:-1])  # exclude the module file name
-            app.include_router(module.router, prefix=prefix, tags=[parts[-1]])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"], # Allows all headers
+)
 
-# Automatically include all routers defined under app.endpoints
-include_routers_from_package(app, "app.endpoints")
+# Include your main API router
+# All routes from user_router and project_router will be prefixed with /api
+app.include_router(api_router, prefix="/api")
+
+# You can still include other routers directly if needed,
+# but centralizing in api_router is cleaner.
+# For example, if you keep the volcano plot separate for now:
+# from app.endpoints.benchtop.biology.omics.transcriptomics.bulk_rna_seq import volcano as volcano_endpoint_module
+# app.include_router(
+#    volcano_endpoint_module.router,
+#    prefix="/api/benchtop/biology/omics/transcriptomics/bulk-rna-seq", # Keep existing prefix
+#    tags=["Volcano Plot - Legacy"] # Or just "Volcano Plot"
+#)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Note: When running with Docker, the CMD in Dockerfile usually starts Uvicorn.
+    # This __main__ block is more for direct execution (e.g., python backend/main.py).
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

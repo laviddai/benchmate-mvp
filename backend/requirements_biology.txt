@@ -6,6 +6,7 @@ bokeh
 cartopy
 csbdeep
 dash
+email-validator
 fastapi
 holoviews
 igraph
