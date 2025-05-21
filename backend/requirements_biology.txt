@@ -3,6 +3,7 @@ anndata
 biopython
 bioinfokit
 bokeh
+boto3
 cartopy
 csbdeep
 dash
