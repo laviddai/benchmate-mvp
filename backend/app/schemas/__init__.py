@@ -13,6 +13,13 @@ from .project_schema import (  # Add these lines
     ProjectWithMembersRead
 )
 
+from .dataset_schema import (
+    DatasetBase,
+    DatasetCreate,
+    DatasetUpdate,
+    DatasetRead,
+    DatasetReadMinimal
+)
+
 # Add other schema imports here as you create them
-# from .dataset_schema import ...
 # from .analysis_run_schema import ...

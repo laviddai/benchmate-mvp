@@ -12,7 +12,7 @@ from app.db.base_class import Base
 if TYPE_CHECKING:
     from .user import User  # For relationship type hinting
     from .project_member import ProjectMember # For relationship type hinting
-    # from .dataset import Dataset # For future Dataset relationship
+    from .dataset import Dataset # For Dataset relationship
     # from .analysis_run import AnalysisRun # For future AnalysisRun relationship
 
 class Project(Base):
@@ -51,8 +51,13 @@ class Project(Base):
         cascade="all, delete-orphan" # If a project is deleted, all its memberships are also deleted
     )
 
+    datasets: Mapped[List["Dataset"]] = relationship(
+        "Dataset",
+        back_populates="project",
+        lazy="selectin",
+        cascade="all, delete-orphan" # If a project is deleted, its datasets are also deleted
+    )
     # Future relationships:
-    # datasets: Mapped[List["Dataset"]] = relationship("Dataset", back_populates="project", lazy="selectin", cascade="all, delete-orphan")
     # analysis_runs: Mapped[List["AnalysisRun"]] = relationship("AnalysisRun", back_populates="project", lazy="selectin", cascade="all, delete-orphan")
 
 

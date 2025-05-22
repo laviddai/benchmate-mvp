@@ -23,4 +23,12 @@ from .crud_project import ( # Add these lines
     remove_project_member
 )
 
+from .crud_dataset import (
+    get_dataset,
+    get_datasets_by_project,
+    create_dataset,
+    update_dataset,
+    remove_dataset
+)
+
 # Add other CRUD module imports here as you create them for Dataset, AnalysisRun etc.
