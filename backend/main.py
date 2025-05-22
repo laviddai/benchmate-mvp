@@ -1,10 +1,19 @@
 # backend/main.py
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware # Ensure this is imported
 
 from app.api.api_router import api_router
 from app.core.config import settings
 from app.services import init_s3_buckets # <<< IMPORT NEW FUNCTION
+
+logging.basicConfig(
+    stream=sys.stdout, # Log to standard output
+    level=logging.INFO, # Log INFO, WARNING, ERROR, CRITICAL
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="BenchMate Backend API",
