@@ -5,40 +5,93 @@
 #
 #  Services
 #  --------
-#  • backend:  FastAPI application
-#  • frontend: React application
-#  • postgres: PostgreSQL database service
-#  • redis:    for Celery job queue (async tasks)
-#  • minio:    S3-compatible object storage for files
+#  • backend:      FastAPI application (API server)
+#  • celeryworker: Celery worker for background tasks
+#  • frontend:     React application (UI)
+#  • postgres:     PostgreSQL database service
+#  • redis:        Broker for Celery job queue & result backend
+#  • minio:        S3-compatible object storage for files
 ###############################################################################
 
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./backend # Tells Docker to build from the backend/ directory
+      dockerfile: Dockerfile # Specifies the Dockerfile to use
     container_name: benchmate_backend
     volumes:
-      - ./backend:/app
+      - ./backend:/app # Mounts your local backend code into /app in the container for live updates
     environment:
-      - PYTHONUNBUFFERED=1
+      # These environment variables are available inside the backend container.
+      # Your app.core.config.settings should pick these up from backend/.env if present,
+      # or you can set them explicitly here if .env loading is problematic for a service.
+      - PYTHONUNBUFFERED=1 # Ensures Python output (print/log) is sent straight to terminal
+      - REDIS_HOSTNAME=redis # For celery_worker.py if it uses os.getenv directly
+      - REDIS_PORT=6379      # For celery_worker.py if it uses os.getenv directly
+      # Ensure all necessary env vars for settings.py (DATABASE_URL, S3_*) are available
+      # either via backend/.env (preferred) or explicitly set here.
     ports:
-      - "8000:8000"
-    depends_on:
+      - "8000:8000" # Maps port 8000 on host to 8000 in container (FastAPI)
+    depends_on: # Specifies dependencies between services
       postgres:
-        condition: service_healthy
+        condition: service_healthy # Waits for postgres healthcheck to pass
       redis:
-        condition: service_healthy # Changed to service_healthy if redis has a healthcheck
-      minio: # <<< NEW DEPENDENCY
-        condition: service_healthy # <<< NEW DEPENDENCY
-    command:
+        condition: service_healthy # Waits for redis healthcheck to pass
+      minio:
+        condition: service_healthy # Waits for minio healthcheck to pass
+    command: # Command to run when the container starts
       - uvicorn
-      - main:app
+      - main:app # Points to the 'app' instance in 'main.py'
       - --host
-      - "0.0.0.0"
+      - "0.0.0.0" # Listen on all available network interfaces
       - --port
       - "8000"
-      - --reload
+      - --reload # Enables auto-reloading on code changes (for development)
+
+  # --- NEW CELERY WORKER SERVICE ---
+  celeryworker:
+    build: # Uses the same Docker image as the 'backend' service
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: benchmate_celeryworker
+    volumes:
+      - ./backend:/app # Mounts your local backend code for consistency and live updates
+    environment:
+      # Celery worker also needs environment variables to configure itself and connect
+      # to Redis, PostgreSQL (if tasks access DB directly), and S3/MinIO.
+      # It will use app.core.config which reads backend/.env.
+      - PYTHONUNBUFFERED=1
+      - REDIS_HOSTNAME=redis # Directly used by celery_worker.py via os.getenv as a default
+      - REDIS_PORT=6379      # Directly used by celery_worker.py via os.getenv as a default
+      # Ensure DATABASE_URL, S3_*, etc., are accessible if tasks use app.core.config.settings
+    depends_on: # Worker needs Redis and potentially DB/S3 to be up
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      # backend: # Optional: can wait for backend if there's tight coupling, but usually not needed for worker startup
+      #   condition: service_started
+    command: > # Multi-line command
+      sh -c "
+        echo 'Celery worker: Waiting a few seconds for other services to stabilize...' &&
+        sleep 15 &&
+        echo 'Celery worker: Starting...' &&
+        celery -A app.celery_worker worker -l INFO -Q benchmate_main_queue --concurrency=1 -E
+      "
+    # Explanation of celery command:
+    # `celery -A app.celery_worker`: Points to the Celery app instance (`celery_app`)
+    #                                in `backend/app/celery_worker.py`.
+    # `worker`: Runs a worker process.
+    # `-l INFO`: Sets the logging level to INFO.
+    # `-Q benchmate_main_queue`: (Optional) Makes this worker consume tasks from this specific queue.
+    #                            This is good for routing different types of tasks to different workers later.
+    # `--concurrency=1`: (Optional) Number of parallel worker processes. Start with 1 for simplicity.
+    #                      Adjust based on CPU cores and task nature (CPU-bound vs I/O-bound).
+    # `-E`: Enables task events, which can be useful for monitoring with tools like Flower.
+    # `sleep 15`: Gives other services (especially DB after migrations if any) ample time to be fully ready.
+  # --- END NEW CELERY WORKER SERVICE ---
 
   frontend:
     image: node:18-alpine
@@ -50,7 +103,7 @@ services:
       - REACT_APP_API_BASE_URL=http://localhost:8000
     volumes:
       - ./frontend/benchtop:/usr/src/app
-      - /usr/src/app/node_modules
+      - /usr/src/app/node_modules # Isolate node_modules in the container
     ports:
       - "3000:3000"
     command: sh -c "npm install && npm start"
@@ -83,29 +136,24 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- NEW MINIO SERVICE ---
   minio:
-    image: minio/minio:RELEASE.2023-09-04T19-57-37Z # Use a specific, recent release
+    image: minio/minio:RELEASE.2023-09-04T19-57-37Z
     container_name: benchmate_minio
     environment:
-      # These are the default credentials for MinIO's root user
-      # CHANGE THESE FOR ANY REAL DEPLOYMENT and manage securely
-      MINIO_ROOT_USER: benchmateadmin # Min 3 chars
-      MINIO_ROOT_PASSWORD: supersecretminiopassword # Min 8 chars
-      # MINIO_DEFAULT_BUCKETS: "benchmate-datasets,benchmate-results" # Optional: auto-create buckets
+      MINIO_ROOT_USER: benchmateadmin
+      MINIO_ROOT_PASSWORD: supersecretminiopassword
     ports:
-      - "9000:9000"  # API port
-      - "9001:9001"  # Console/UI port
+      - "9000:9000"
+      - "9001:9001"
     volumes:
-      - minio_data:/data # Persist MinIO data
-    command: server /data --console-address ":9001" # Start server and point to data dir, enable console
+      - minio_data:/data
+    command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
-  # --- END NEW MINIO SERVICE ---
 
-volumes:
+volumes: # Defines named volumes for persistent storage
   postgres_data:
-  minio_data: # <<< NEW NAMED VOLUME FOR MINIO
+  minio_data:

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .user import User  # For relationship type hinting
     from .project_member import ProjectMember # For relationship type hinting
     from .dataset import Dataset # For Dataset relationship
-    # from .analysis_run import AnalysisRun # For future AnalysisRun relationship
+    from .analysis_run import AnalysisRun # For AnalysisRun relationship
 
 class Project(Base):
     __tablename__ = "projects"
@@ -57,9 +57,13 @@ class Project(Base):
         lazy="selectin",
         cascade="all, delete-orphan" # If a project is deleted, its datasets are also deleted
     )
-    # Future relationships:
-    # analysis_runs: Mapped[List["AnalysisRun"]] = relationship("AnalysisRun", back_populates="project", lazy="selectin", cascade="all, delete-orphan")
-
+    
+    analysis_runs: Mapped[List["AnalysisRun"]] = relationship(
+        "AnalysisRun",
+        back_populates="project",
+        lazy="selectin",
+        cascade="all, delete-orphan" # If a project is deleted, its analysis runs are also deleted
+    )
 
     def __repr__(self):
         return f"<Project(id={self.id}, name='{self.name}')>"

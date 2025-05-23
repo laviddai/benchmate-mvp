@@ -5,6 +5,7 @@ bioinfokit
 bokeh
 boto3
 cartopy
+celery
 csbdeep
 dash
 email-validator
@@ -29,6 +30,7 @@ pyyaml
 python-dotenv
 python-multipart
 rasterio
+redis
 scikit-learn
 scipy
 seaborn

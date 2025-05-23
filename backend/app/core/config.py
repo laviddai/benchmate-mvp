@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # SECRET_KEY: str = "a_very_secret_key_that_should_be_long_and_random"
     # ALGORITHM: str = "HS256"
     # ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+        
+    REDIS_HOSTNAME: str = "redis"
+    REDIS_PORT: int = 6379
 
     model_config = SettingsConfigDict(
         env_file= BACKEND_ROOT_DIR / ".env",

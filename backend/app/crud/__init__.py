@@ -31,4 +31,14 @@ from .crud_dataset import (
     remove_dataset
 )
 
-# Add other CRUD module imports here as you create them for Dataset, AnalysisRun etc.
+from .crud_analysis_run import (
+    get_analysis_run,
+    get_analysis_runs_by_project,
+    get_analysis_runs_by_user,
+    create_analysis_run,
+    update_analysis_run_status,
+    update_analysis_run_outputs,
+    update_analysis_run_internal,
+    remove_analysis_run
+)
+# Add other CRUD module imports here as you create them
