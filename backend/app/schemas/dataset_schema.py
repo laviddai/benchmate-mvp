@@ -10,49 +10,51 @@ class DatasetBase(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     file_type: Optional[str] = Field(None, max_length=50)
-    metadata_: Optional[Dict[str, Any]] = Field(None, alias="metadata") # Alias for input/output
+    
+    # Pydantic field name matches SQLAlchemy attribute name
+    metadata_: Optional[Dict[str, Any]] = Field(None, alias="metadata") 
+    # The 'alias' here means:
+    # - For input JSON, it can accept "metadata" and map it to `metadata_`.
+    # - For output JSON, it will serialize `metadata_` as "metadata".
+    # When using from_attributes=True, it will look for an attribute named `metadata_` on the ORM object.
+    
     technique_type: Optional[str] = Field(None, max_length=100)
 
     class Config:
         from_attributes = True
-        # Allows using 'metadata' in Python code and 'metadata_' in Pydantic model
-        # if you need to differentiate, or just use metadata_ consistently.
-        # For simplicity, we can just use metadata_ in the model and expect metadata_ in API.
-        # If you want API to use 'metadata' but model has 'metadata_', use populate_by_name
-        # populate_by_name = True
+        populate_by_name = True # This makes Pydantic use aliases when populating from dicts/JSON
+                                # and also when serializing to dicts/JSON.
+                                # For from_attributes, it should still primarily look for the attribute name itself.
 
 
 # --- Dataset Create Schema ---
-# Information needed when creating a dataset record (typically after file upload)
 class DatasetCreate(DatasetBase):
     name: str = Field(..., min_length=1, max_length=255)
-    file_name: str # Original filename from upload
-    file_path_s3: str # S3 key provided by the upload service
+    file_name: str
+    file_path_s3: str
     file_size_bytes: Optional[int] = None
     project_id: uuid.UUID
-    # uploaded_by_user_id will be set by the backend
+    # metadata_ is inherited. When creating from JSON, if "metadata" key is present, it maps to metadata_.
+
 
 # --- Dataset Update Schema ---
 class DatasetUpdate(DatasetBase):
-    # Only name, description, metadata, technique_type can be updated
-    # File path and original file info should generally not change after creation
     pass
 
 
 # --- Dataset Read Schema ---
-# Information returned when reading a dataset
 class DatasetRead(DatasetBase):
     id: uuid.UUID
     name: str
     file_name: str
-    file_path_s3: str # Usually you'd return a presigned URL instead of the direct S3 path
+    file_path_s3: str
     file_size_bytes: Optional[int] = None
+    # metadata_ is inherited. When serializing to JSON, it becomes "metadata".
+    # When creating from ORM (db_dataset), it reads db_dataset.metadata_
     project_id: uuid.UUID
     uploaded_by_user_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-
-    # For API response, you might want a temporary, downloadable URL
     download_url: Optional[str] = None
 
 

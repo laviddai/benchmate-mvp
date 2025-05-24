@@ -6,18 +6,14 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func, or_
 
 from app.models.project import Project
-from app.models.user import User
+from app.models.user import User # Make sure User is imported
 from app.models.project_member import ProjectMember
 from app.schemas.project_schema import ProjectCreate, ProjectUpdate, ProjectMemberCreate, ProjectMemberUpdate
 
 
 # --- Project CRUD ---
-
+# ... (get_project, get_projects_by_owner, get_projects_for_user remain the same) ...
 def get_project(db: Session, project_id: uuid.UUID) -> Optional[Project]:
-    """
-    Retrieve a single project by its ID.
-    Optionally eager load owner and members.
-    """
     return (
         db.query(Project)
         .options(selectinload(Project.owner), selectinload(Project.members).selectinload(ProjectMember.user))
@@ -28,13 +24,10 @@ def get_project(db: Session, project_id: uuid.UUID) -> Optional[Project]:
 def get_projects_by_owner(
     db: Session, owner_id: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> List[Project]:
-    """
-    Retrieve projects owned by a specific user with pagination.
-    """
     return (
         db.query(Project)
         .filter(Project.created_by_user_id == owner_id)
-        .options(selectinload(Project.owner)) # Eager load owner
+        .options(selectinload(Project.owner))
         .order_by(Project.updated_at.desc())
         .offset(skip)
         .limit(limit)
@@ -44,59 +37,61 @@ def get_projects_by_owner(
 def get_projects_for_user(
     db: Session, user_id: uuid.UUID, skip: int = 0, limit: int = 100
 ) -> List[Project]:
-    """
-    Retrieve projects a user is a member of (or owns) with pagination.
-    """
     return (
         db.query(Project)
         .join(ProjectMember, Project.id == ProjectMember.project_id)
         .filter(
             or_(
-                Project.created_by_user_id == user_id, # User owns the project
-                ProjectMember.user_id == user_id       # User is a member of the project
+                Project.created_by_user_id == user_id,
+                ProjectMember.user_id == user_id
             )
         )
         .options(selectinload(Project.owner), selectinload(Project.members).selectinload(ProjectMember.user))
         .order_by(Project.updated_at.desc())
-        .distinct() # Ensure projects are not duplicated if user is owner AND member (though our model prevents this specific case)
+        .distinct()
         .offset(skip)
         .limit(limit)
         .all()
     )
-
 
 def create_project(db: Session, *, project_in: ProjectCreate, owner_id: uuid.UUID) -> Project:
     """
     Create a new project.
     The owner_id is explicitly passed, typically from the authenticated user context.
     """
-    db_project_data = project_in.model_dump(exclude_unset=True)
-    db_project = Project(**db_project_data, created_by_user_id=owner_id)
-    db.add(db_project)
+    owner_user = db.query(User).filter(User.id == owner_id).first()
+    if not owner_user:
+        raise ValueError(f"Owner user with id {owner_id} not found.") # Or HTTPException in API layer
 
-    # Add the owner as a member with the 'owner' role
-    owner_membership = ProjectMember(
-        project_id=db_project.id, # This will be set after flush if not before
-        user_id=owner_id,
-        role="owner"
-    )
-    db.add(owner_membership)
+    db_project_data = project_in.model_dump(exclude_unset=True)
+    db_project = Project(**db_project_data, owner=owner_user) # Assign owner object directly
+
+    # Create the ProjectMember instance for the owner
+    # And associate it with the project and user using the relationship attributes
+    owner_membership = ProjectMember(role="owner")
+    owner_membership.user = owner_user   # Link to the User object
+    owner_membership.project = db_project # Link to the Project object
+
+    # Add to session. SQLAlchemy will figure out the order.
+    # When db_project is added, its ID is generated (if not already set by Python default).
+    # When owner_membership is processed, its project_id will be populated from db_project.
+    db.add(db_project)
+    db.add(owner_membership) # Or db_project.members.append(owner_membership) if cascade is set for save-update
 
     db.commit()
-    db.refresh(db_project)
-    # db.refresh(owner_membership) # Optional, if you need the refreshed membership object immediately
+    db.refresh(db_project) # Refresh to get all attributes, including any loaded relationships
+    # To access db_project.members immediately after commit and see the owner_membership,
+    # you might need to refresh that relationship or the owner_membership object itself.
+    # For now, returning db_project is the primary goal.
     return db_project
 
-
+# ... (update_project, remove_project, and ProjectMember CRUD functions remain the same) ...
 def update_project(
     db: Session,
     *,
-    db_project: Project, # Existing SQLAlchemy Project model instance
-    project_in: Union[ProjectUpdate, Dict[str, Any]] # Pydantic schema or dict for updates
+    db_project: Project, 
+    project_in: Union[ProjectUpdate, Dict[str, Any]]
 ) -> Project:
-    """
-    Update an existing project.
-    """
     if isinstance(project_in, dict):
         update_data = project_in
     else:
@@ -111,40 +106,27 @@ def update_project(
     return db_project
 
 def remove_project(db: Session, *, project_id: uuid.UUID) -> Optional[Project]:
-    """
-    Delete a project by its ID.
-    Associated ProjectMember entries will be cascade deleted due to model definition.
-    """
     project_to_delete = db.query(Project).filter(Project.id == project_id).first()
     if project_to_delete:
         db.delete(project_to_delete)
         db.commit()
     return project_to_delete
 
-
-# --- ProjectMember CRUD ---
-
 def get_project_member(
     db: Session, project_id: uuid.UUID, user_id: uuid.UUID
 ) -> Optional[ProjectMember]:
-    """
-    Retrieve a specific project member entry.
-    """
     return (
         db.query(ProjectMember)
         .filter(ProjectMember.project_id == project_id, ProjectMember.user_id == user_id)
-        .options(selectinload(ProjectMember.user)) # Eager load user details
+        .options(selectinload(ProjectMember.user)) 
         .first()
     )
 
 def get_project_members(db: Session, project_id: uuid.UUID, skip: int = 0, limit: int = 100) -> List[ProjectMember]:
-    """
-    Retrieve all members of a specific project with pagination.
-    """
     return (
         db.query(ProjectMember)
         .filter(ProjectMember.project_id == project_id)
-        .options(selectinload(ProjectMember.user)) # Eager load user details for each member
+        .options(selectinload(ProjectMember.user)) 
         .order_by(ProjectMember.joined_at.asc())
         .offset(skip)
         .limit(limit)
@@ -154,28 +136,27 @@ def get_project_members(db: Session, project_id: uuid.UUID, skip: int = 0, limit
 def add_project_member(
     db: Session, *, project_id: uuid.UUID, member_in: ProjectMemberCreate
 ) -> Optional[ProjectMember]:
-    """
-    Add a user to a project with a specific role.
-    Checks if the user already exists in the project.
-    """
     existing_member = get_project_member(db, project_id=project_id, user_id=member_in.user_id)
     if existing_member:
-        # Optionally, update the role if already a member, or raise an error/return existing
-        # For now, let's just return the existing member to prevent duplicates from this function
-        return existing_member # Or raise HTTPException(status_code=409, detail="User is already a member of this project")
+        return existing_member
 
-    # Ensure the user exists (optional, but good practice)
     user = db.query(User).filter(User.id == member_in.user_id).first()
     if not user:
-        return None # Or raise HTTPException(status_code=404, detail="User to add not found")
+        return None 
 
-    db_member_data = member_in.model_dump() # No exclude_unset, role is required
-    db_member = ProjectMember(project_id=project_id, **db_member_data)
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return None # Should not happen if project_id is validated at API layer
+
+    db_member_data = member_in.model_dump() 
+    db_member = ProjectMember(**db_member_data)
+    db_member.project = project # Link to project
+    db_member.user = user       # Link to user
+
     db.add(db_member)
     db.commit()
     db.refresh(db_member)
     return db_member
-
 
 def update_project_member_role(
     db: Session,
@@ -184,14 +165,11 @@ def update_project_member_role(
     user_id: uuid.UUID,
     member_in: ProjectMemberUpdate
 ) -> Optional[ProjectMember]:
-    """
-    Update the role of an existing project member.
-    """
     db_member = get_project_member(db, project_id=project_id, user_id=user_id)
     if not db_member:
-        return None # Or raise HTTPException(status_code=404, detail="Project member not found")
+        return None
 
-    update_data = member_in.model_dump(exclude_unset=True) # Only update provided fields (i.e., role)
+    update_data = member_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_member, field, value)
 
@@ -203,16 +181,8 @@ def update_project_member_role(
 def remove_project_member(
     db: Session, *, project_id: uuid.UUID, user_id: uuid.UUID
 ) -> Optional[ProjectMember]:
-    """
-    Remove a user from a project.
-    """
     member_to_delete = get_project_member(db, project_id=project_id, user_id=user_id)
     if member_to_delete:
-        # Prevent owner from being removed this way if it's the last owner or specific logic
-        # For now, simple removal. More complex logic can be added in a service layer.
-        # if member_to_delete.role == "owner" and member_to_delete.user_id == member_to_delete.project.created_by_user_id:
-        #     # Potentially check if there are other owners before allowing removal
-        #     pass
         db.delete(member_to_delete)
         db.commit()
     return member_to_delete
