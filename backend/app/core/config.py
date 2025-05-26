@@ -34,6 +34,7 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Verify S3 settings are loaded (for debugging, remove later)
-# print(f"S3_ENDPOINT_URL: {settings.S3_ENDPOINT_URL}")
-# print(f"S3_BUCKET_NAME_DATASETS: {settings.S3_BUCKET_NAME_DATASETS}")
+# --- Add this for debugging ---
+print(f"DEBUG: Loaded DATABASE_URL: {settings.DATABASE_URL[:15]}... (check if None or correct prefix)")
+print(f"DEBUG: Loaded S3_ENDPOINT_URL: {settings.S3_ENDPOINT_URL}")
+# --- End debug print ---

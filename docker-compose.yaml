@@ -78,7 +78,7 @@ services:
         echo 'Celery worker: Waiting a few seconds for other services to stabilize...' &&
         sleep 15 &&
         echo 'Celery worker: Starting...' &&
-        celery -A app.celery_worker worker -l INFO -Q benchmate_main_queue --concurrency=1 -E
+        celery -A app.celery_worker worker -l INFO --concurrency=1 -E
       "
     # Explanation of celery command:
     # `celery -A app.celery_worker`: Points to the Celery app instance (`celery_app`)

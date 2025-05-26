@@ -16,6 +16,11 @@ from .project_router import get_current_active_user_placeholder
 
 router = APIRouter()
 
+# --- ADD THIS TEST ENDPOINT ---
+@router.get("/test-route/") # Simple GET endpoint at the root of this router's prefix
+async def test_dataset_router_alive():
+    return {"message": "Dataset router's /test-route/ is ALIVE!"}
+# --- END TEST ENDPOINT ---
 
 @router.post("/upload-and-create/", response_model=schemas.DatasetRead, status_code=status.HTTP_201_CREATED)
 async def upload_and_create_dataset_entry(
