@@ -93,20 +93,20 @@ services:
     # `sleep 15`: Gives other services (especially DB after migrations if any) ample time to be fully ready.
   # --- END NEW CELERY WORKER SERVICE ---
 
-  frontend:
-    image: node:18-alpine
-    container_name: benchmate_frontend
-    working_dir: /usr/src/app
-    environment:
-      - NODE_OPTIONS=--openssl-legacy-provider
-      - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_API_BASE_URL=http://localhost:8000
-    volumes:
-      - ./frontend/benchtop:/usr/src/app
-      - /usr/src/app/node_modules # Isolate node_modules in the container
-    ports:
-      - "3000:3000"
-    command: sh -c "npm install && npm start"
+#  frontend:
+#    image: node:18-alpine
+#    container_name: benchmate_frontend
+#    working_dir: /usr/src/app
+#    environment:
+#      - NODE_OPTIONS=--openssl-legacy-provider
+#      - CHOKIDAR_USEPOLLING=true
+#      - REACT_APP_API_BASE_URL=http://localhost:8000
+#    volumes:
+#      - ./frontend/benchtop:/usr/src/app
+#      - /usr/src/app/node_modules # Isolate node_modules in the container
+#    ports:
+#      - "3000:3000"
+#    command: sh -c "npm install && npm start"
 
   postgres:
     image: postgres:15-alpine
