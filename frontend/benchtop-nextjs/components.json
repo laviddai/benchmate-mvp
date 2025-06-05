@@ -1,12 +1,12 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "new-york",
+  "style": "new-york", // Or "default", based on your choice
   "rsc": true,
   "tsx": true,
   "tailwind": {
-    "config": "",
+    "config": "tailwind.config.ts", // Or "tailwind.config.js" if that's your filename
     "css": "src/app/globals.css",
-    "baseColor": "slate",
+    "baseColor": "slate", // Or your chosen base color
     "cssVariables": true,
     "prefix": ""
   },
