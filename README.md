@@ -1,170 +1,147 @@
-# BenchMate-MVP
+# BenchMate: A Unified Platform for Scientific Analysis, Visualization, and Collaboration
 
-Welcome to BenchMate-MVP, the scalable, modular platform that brings together innovative researcher tools with a social collaboration layer for the scientific community. This private repository houses the next-generation version of BenchMate. The system is designed to support data-intensive analysis, interactive visualizations, and social engagement, all built on a robust asynchronous backend (Python with FastAPI) and dynamic frontend applications (React).
+**Status:** Actively In Development (Focusing on BenchTop MVP)
 
-## Overview
+Welcome to the BenchMate repository. BenchMate is a scalable, modular platform designed to bring together innovative researcher tools (**BenchTop**) with a collaborative social layer (**BenchMate Social**) for the scientific community. The system supports data-intensive analysis, interactive visualizations with publication-quality output, and aims to foster scientific engagement, all built on a robust asynchronous backend (Python with FastAPI) and a dynamic frontend (Next.js/React for BenchTop).
 
-BenchMate-MVP consists of two primary components:
+## 1. Overview
 
-- **BenchTop:**  
-  A suite of powerful research tools for data analysis and visualization (e.g., the Volcano Plot tool for bulk RNA-seq analysis). This part of the platform empowers researchers to process, visualize, and share their data analyses.
+BenchMate consists of two primary, integrated components:
 
-- **BenchSocial:**  
-  A dedicated social platform for scientists to share insights, collaborate, and engage with a broader community. BenchSocial integrates with BenchTop so that users can easily post and discuss their analytical results.
+*   **BenchTop (Current MVP Focus):**  
+    An interactive analytical workbench empowering researchers to:
+    *   Upload and manage diverse scientific data (MVP starting with bulk RNA-seq and foundational imaging).
+    *   Perform complex analyses without requiring coding expertise.
+    *   Generate and refine publication-quality visualizations.
+    *   Utilize a growing library of tools driven by a flexible YAML configuration system.
 
-Additionally, the project uses YAML configurations to define tool behavior and settings, which are parsed by the backend and served to the frontend as JSON.
+*   **BenchMate Social (Parallel Development for Future Integration):**  
+    A dedicated social platform for scientists to:
+    *   Share insights, analyses, and results from BenchTop.
+    *   Collaborate within and across disciplines.
+    *   Engage with a broader scientific community and the public.
+    *   (Planned Backend: Supabase)
 
-## Key Features
+## 2. Key Features & Goals
 
-- **Modular Architecture:**  
-  Separate backend and frontend projects organized by domain, ensuring each component can be developed and scaled independently.
+*   **Unified Workspace:** Seamlessly integrate data analysis, visualization, and (future) collaboration.
+*   **Accessible Power:** Make sophisticated scientific tools available to researchers regardless of coding skill, via an intuitive UI.
+*   **Publication-Quality Outputs:** Enable users to generate and customize figures and tables suitable for scientific publications.
+*   **Modular & Extensible Architecture:** Easily add new scientific domains, techniques, and tools (primarily in BenchTop via YAML configs).
+*   **Reproducibility:** Facilitate reproducible research by logging parameters and workflows.
+*   **Asynchronous Backend:** Efficiently handle computationally intensive tasks using FastAPI and Celery.
+*   **Modern Frontend:** Dynamic and responsive user experience with Next.js and React for BenchTop.
+*   **AI-Assisted Guidance (Future):** Incorporate AI to aid in tool selection, parameter optimization, and result interpretation.
+*   **Collaborative Environment (Future):** Foster interdisciplinary work and science communication through BenchMate Social.
 
-- **Domain Separation:**  
-  Dedicated directories and endpoints for both BenchTop (researcher tools) and BenchSocial (social platform).
+## 3. Getting Started
 
-- **Asynchronous Backend API:**  
-  Built using FastAPI and Uvicorn to efficiently handle large data volumes and simultaneous API requests.
+### 3.1. Prerequisites
+*   Python 3.12+
+*   Node.js (v18+ recommended for Next.js) & npm/yarn/pnpm
+*   Docker & Docker Compose
+*   Git
+*   A code editor like VSCode (recommended with Dev Containers for an optimized setup).
 
-- **Dynamic UI/UX:**  
-  React-based frontends for both researcher tools and the social platform, designed for a consistent and engaging user experience.
+### 3.2. Recommended Setup (Dev Container / Codespaces)
+This repository is configured for use with [VS Code Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers) or [GitHub Codespaces](https://github.com/features/codespaces).
+1.  If using VS Code locally, ensure you have the "Dev Containers" extension installed.
+2.  Open the repository in VS Code. You should be prompted to "Reopen in Container". Click it.
+3.  This will build the development environment as defined in `.devcontainer/devcontainer.json` and `.devcontainer/Dockerfile`.
+4.  The `postCreateCommand` will install backend Python dependencies and frontend Node modules.
+5.  Ports for the frontend (3000) and backend (8000) will be automatically forwarded.
 
-- **Configurable Defaults:**  
-  YAML configuration files provide a human-friendly way to set defaults and parameters, which are easily updated or overridden by users.
+### 3.3. Local Setup (using Docker Compose)
+If not using Dev Containers, you can run the services using Docker Compose:
+1.  Clone the repository: `git clone <repository-url> && cd BenchMate`
+2.  Ensure Docker Desktop (or Docker Engine with Docker Compose plugin) is running.
+3.  Build and start the services:
+    ```bash
+    docker compose up --build -d
+    ```
+    *   This will start the backend API, Celery worker, PostgreSQL, Redis, and MinIO.
+    *   The backend API will be available at `http://localhost:8000`.
+    *   MinIO console will be available at `http://localhost:9001`.
+4.  To run the **BenchTop frontend** (Next.js) development server:
+    ```bash
+    cd frontend/benchtop-nextjs
+    npm install # Or yarn install / pnpm install
+    npm run dev
+    ```
+    *   The BenchTop frontend will be available at `http://localhost:3000`.
 
-- **Scalability:**  
-  A folder structure and codebase designed to support future features including desktop apps, mobile apps, and AI integration.
+### 3.4. Local Setup (Manual - Alternative, more complex)
 
-## Folder Structure
+**Backend (FastAPI):**
+1.  Navigate to `backend/`.
+2.  Create and activate a Python virtual environment:
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate # macOS/Linux
+    # .\.venv\Scripts\activate # Windows
+    ```
+3.  Install dependencies: `pip install -r requirements_biology.txt`
+4.  Ensure PostgreSQL, Redis, and MinIO are running and accessible, and configure environment variables (e.g., in a `.env` file in `backend/`) for `DATABASE_URL`, `S3_ENDPOINT_URL`, etc.
+5.  Run the FastAPI development server: `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+6.  Run the Celery worker in a separate terminal: `celery -A app.celery_worker worker -l INFO`
 
-Below is an overview of the project’s directory structure:
+**Frontend (BenchTop - Next.js):**
+1.  Navigate to `frontend/benchtop-nextjs/`.
+2.  Install dependencies: `npm install`
+3.  Run the development server: `npm run dev`
 
-```
-BenchMate-MVP/
-├── backend/                         # Python backend API
-│   ├── app/
-│   │   ├── config/                  # YAML configuration files
-│   │   │   ├── benchsocial          # Social platform-specific configs (e.g., homepage.yaml)
-│   │   │   ├── benchtop             # Research tools-specific configs (homepage.yaml, biology configs, etc.)
-│   │   │   └── shared               # Configurations shared across domains
-│   │   ├── endpoints/               # API endpoints organized by domain
-│   │   │   ├── benchsocial          # Social endpoints (e.g., posts, comments)
-│   │   │   ├── benchtop             # Research tool endpoints (e.g., biology tools)
-│   │   │   │   └── biology          # Further breakdown for biology subdomains (calcium_imaging, electrophysiology, etc.)
-│   │   │   ├── integration          # Endpoints bridging BenchTop and BenchSocial functionality
-│   │   │   └── README.md            # Documentation for endpoints
-│   │   └── utils/                   # Shared utilities (e.g., configuration loaders, authentication helpers)
-│   │       ├── benchsocial
-│   │       ├── benchtop
-│   │       └── README.md
-│   ├── main.py                      # Backend API entry point (FastAPI app)
-│   └── requirements.txt             # Python dependencies for the backend
-├── docs/                            # Documentation (architecture diagrams, integration plan, etc.)
-│   └── architecture.md
-├── env/                             # Virtual environment folder (should be ignored by Git)
-├── frontend/                        # Frontend projects
-│   ├── benchsocial/                 # React app for the social platform
-│   │   ├── public/                  # Public assets (HTML, images, etc.)
-│   │   └── src/                     # Source code for BenchSocial UI
-│   │       ├── components/          # Reusable components
-│   │       └── app.js               # Main React component for BenchSocial
-│   ├── benchtop/                    # React app for researcher tools
-│   │   ├── public/                  # Public assets for BenchTop
-│   │   └── src/                     # Source code for BenchTop UI
-│   │       ├── components/          # Reusable UI components (e.g., TooltipGuide, VisualizationPage)
-│   │       └── app.js               # Main React component for BenchTop
-│   └── packages-json/               # Package.json files organized by domain (including shared configurations)
-├── .gitignore                       # Files and folders to ignore in Git (e.g., env/, node_modules/)
-└── README.md                        # This README file
-```
+*(Note: The Docker Compose or Dev Container methods are highly recommended for a consistent development experience.)*
 
-## Getting Started
+## 4. Project Structure Overview
 
-### Prerequisites
+The repository is organized into several key directories:
 
-- **Python 3.8+**  
-- **Node.js and npm** (for React apps)
-- **Git** (for version control)
-- A code editor like **VSCode**
+*   **`backend/`**: Contains the Python FastAPI application for BenchTop's API, Celery workers, database models, analysis processing scripts, and tool configurations (YAML).
+*   **`frontend/benchtop-nextjs/`**: Contains the Next.js/React application for the BenchTop user interface.
+*   **`docs/`**: Houses detailed project documentation:
+    *   [`docs/prd.md`](./docs/prd.md): Product Requirements Document.
+    *   [`docs/architecture.md`](./docs/architecture.md): System Architecture Document.
+    *   [`docs/white_paper.md`](./docs/white_paper.md): Project White Paper.
+*   **`.devcontainer/`**: Configuration for VS Code Dev Containers and GitHub Codespaces.
+*   **`.github/workflows/`**: CI/CD pipelines using GitHub Actions for automated testing and builds.
+*   **`docker-compose.yaml`**: Defines the multi-container local development environment.
+*   **`tests/`**: Contains backend and (future) frontend tests.
 
-### Setting Up the Backend
+*(For a more granular breakdown of the `backend` and `frontend` subdirectories, please refer to `docs/architecture.md#5-directory-structure-overview`.)*
 
-1. **Clone the Repository**  
-   ```bash
-   git clone <repository-url>
-   cd BenchMate-MVP/backend
-   ```
+## 5. Core Technologies
 
-2. **Create and Activate a Virtual Environment**  
-   ```bash
-   python -m venv env
-   # On Windows:
-   .\env\Scripts\activate
-   # On macOS/Linux:
-   source env/bin/activate
-   ```
+*   **Backend:** Python, FastAPI, Celery, SQLAlchemy, PostgreSQL, Redis, MinIO (S3-compatible).
+*   **Frontend (BenchTop):** Next.js, React, TypeScript, Tailwind CSS, shadcn/ui.
+*   **Configuration:** YAML.
+*   **DevOps:** Docker, Docker Compose, GitHub Actions.
 
-3. **Install Python Dependencies**  
-   ```bash
-   pip install -r requirements.txt
-   ```
+## 6. Documentation Suite
 
-4. **Run the Backend Server**  
-   For example, if using FastAPI with Uvicorn:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+For a comprehensive understanding of the BenchMate platform, please refer to our detailed documentation:
 
-### Setting Up the Frontend
+*   **Product Requirements (What & Why):** [`docs/prd.md`](./docs/prd.md)
+    *   *Key Sections for Understanding Current Focus:* Section 1 (Introduction & Vision), Section 3 (BenchTop MVP: Demonstrating a Generalizable Workflow).
+*   **System Architecture (How):** [`docs/architecture.md`](./docs/architecture.md)
+    *   *Key Sections for Technical Overview:* Section 3 (High-Level System Architecture), Section 4 (Detailed Component Interactions).
+*   **Project Vision & Impact (Broader Context):** [`docs/white_paper.md`](./docs/white_paper.md)
+    *   *Key Sections for Overall Goals:* Section 2 (Introduction), Section 3 (The BenchMate Solution).
 
-Each frontend project (BenchSocial and BenchTop) is a separate React application.
+These documents provide the full context for development, features, and future roadmap.
 
-1. **Navigate to the Frontend Directory**  
-   ```bash
-   cd BenchMate-MVP/frontend/benchtop
-   npm install
-   npm start
-   ```
-   Repeat for the BenchSocial project if needed.
+## 7. Contributing
 
-2. **Shared Package Configurations:**  
-   The `packages-json` folder contains individual package.json files for specialized parts of your frontend. Adjust these as necessary based on your project needs.
+This is currently a private repository. For team members:
+1.  Create feature branches from `main` (or the designated development branch).
+2.  Follow established coding standards and practices.
+3.  Ensure new code is accompanied by relevant tests.
+4.  Update documentation (PRD, Architecture, READMEs) as features evolve.
+5.  Submit Pull Requests for review and merging.
 
-## Architecture & Integration
+## 8. License
 
-Our system is designed with clear separation of concerns:
+Currently proprietary. (Placeholder - update as needed)
 
-- **Backend API:**  
-  Manages data processing, configuration management (via YAML), and serves endpoints for both the researcher tools (BenchTop) and social features (BenchSocial).
+## 9. Contact
 
-- **Frontend Applications:**  
-  Independently built React apps tailored to specific user groups while sharing common components and configurations where applicable.
-
-- **Integration Points:**  
-  When an analysis result from BenchTop needs to be shared on BenchSocial, our integration endpoints or frontend coordination ensures smooth data flow and interaction between these domains.
-
-For a detailed architecture overview, see the [docs/architecture.md](docs/architecture.md) file.
-
-## Contributing
-
-This repository is private. However, for team members with access:
-
-1. **Fork the repository and work on feature branches.**
-2. **Ensure you adhere to the coding standards outlined in our documentation.**
-3. **Write unit tests for new features and ensure all tests pass before merging.**
-4. **Update documentation (README, architecture docs, etc.) as necessary.**
-
-## Onboarding & Documentation
-
-- **Onboarding Guides:**  
-  Refer to the [docs/architecture.md](docs/architecture.md) for a complete overview of our integration plan, folder structure, and module responsibilities.
-
-- **Additional Documentation:**  
-  Each major folder (backend endpoints, utils, and frontend modules) contains its own README for further details on usage and conventions.
-
-## License
-
-N/A
-
-## Contact
-
-N/A
+(Placeholder - update as needed)
