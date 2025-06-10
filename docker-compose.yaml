@@ -39,15 +39,15 @@ services:
         condition: service_healthy # Waits for redis healthcheck to pass
       minio:
         condition: service_healthy # Waits for minio healthcheck to pass
-    command: # Command to run when the container starts
-      - uvicorn
-      - main:app # Points to the 'app' instance in 'main.py'
-      - --host
-      - "0.0.0.0" # Listen on all available network interfaces
-      - --port
-      - "8000"
-      - --reload # Enables auto-reloading on code changes (for development)
-
+    command: > # Use > for a multi-line shell command
+      sh -c "
+        echo 'Backend: Waiting for database to be ready...' &&
+        sleep 5 &&
+        echo 'Backend: Running database migrations...' &&
+        alembic upgrade head &&
+        echo 'Backend: Starting Uvicorn server...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
   # --- NEW CELERY WORKER SERVICE ---
   celeryworker:
     build: # Uses the same Docker image as the 'backend' service

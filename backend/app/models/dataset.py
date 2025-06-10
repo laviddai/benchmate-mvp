@@ -26,7 +26,7 @@ class Dataset(Base):
     # File-related information
     file_name: Mapped[str] = mapped_column(String(512), nullable=False) # Original uploaded filename
     file_path_s3: Mapped[str] = mapped_column(String(1024), nullable=False, unique=True) # Key in S3/MinIO bucket
-    file_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # e.g., "csv", "xlsx", "ome-tiff"
+    file_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # e.g., "csv", "xlsx", "ome-tiff"
     file_size_bytes: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     # Metadata specific to the dataset type (e.g., column names for tabular data, dimensions for images)

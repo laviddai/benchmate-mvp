@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, ConfigDict # Import ConfigDict
 class DatasetBase(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
-    file_type: Optional[str] = Field(None, max_length=50)
+    file_type: Optional[str] = Field(None, max_length=100)
     
     # This is the Python attribute name in the Pydantic model.
     # It should match the attribute on your SQLAlchemy model (Dataset.metadata_).
