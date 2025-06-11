@@ -9,7 +9,7 @@ from app import crud, models, schemas # Uses __init__.py for cleaner imports
 from app.db.session import get_db
 
 # Import the placeholder for current user (replace with actual auth later)
-from .project_router import get_current_active_user_placeholder
+from app.api.endpoints.core.project_router import get_current_active_user_placeholder
 
 router = APIRouter()
 

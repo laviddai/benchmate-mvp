@@ -10,7 +10,7 @@ from app import crud, models, schemas
 from app.db.session import get_db
 from app.services import s3_service
 from app.core.config import settings
-from app.api.endpoints.project_router import get_current_active_user_placeholder
+from app.api.endpoints.core.project_router import get_current_active_user_placeholder
 
 router = APIRouter()
 logger = logging.getLogger(__name__) # Create a logger instance
