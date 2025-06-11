@@ -77,8 +77,26 @@ def preprocess_data(df: pd.DataFrame, mapping: dict, config: dict, params: Volca
     df_processed[pval_col_actual] = pd.to_numeric(df_processed[pval_col_actual], errors='coerce')
     df_processed.dropna(subset=[log2fc_col_actual, pval_col_actual], inplace=True)
 
-    # Compute -log10(p-value)
-    df_processed['_minus_log10_pvalue_'] = -np.log10(df_processed[pval_col_actual] + 1e-10) # Add constant to avoid log(0)
+    # --- FINAL, DATA-ADAPTIVE FIX FOR DATA CUTOFF ---
+    # Find the smallest non-zero p-value in the dataset
+    non_zero_pvals = df_processed.loc[df_processed[pval_col_actual] > 0, pval_col_actual]
+    
+    # If there are any non-zero p-values, use them to handle zeros
+    if not non_zero_pvals.empty:
+        min_pval = non_zero_pvals.min()
+        # Replace any p-values of 0 with a value slightly smaller than the minimum
+        # to preserve their significance while avoiding log(0) errors.
+        df_processed[pval_col_actual] = df_processed[pval_col_actual].replace(0, min_pval * 0.1)
+    
+    # Compute -log10(p-value) on the cleaned data
+    df_processed['_minus_log10_pvalue_'] = -np.log10(df_processed[pval_col_actual])
+
+    # Replace any infinite values that might result from extremely small p-values
+    # with a large but finite number, ensuring it's larger than any other point.
+    if np.isinf(df_processed['_minus_log10_pvalue_']).any():
+        finite_max = df_processed.loc[np.isfinite(df_processed['_minus_log10_pvalue_']), '_minus_log10_pvalue_'].max()
+        df_processed.replace([np.inf, -np.inf], finite_max + 10, inplace=True) # Add a fixed amount to ensure it's visibly higher
+    # --- END OF FIX ---
 
     # Classify regulation status
     def classify_regulation(row):

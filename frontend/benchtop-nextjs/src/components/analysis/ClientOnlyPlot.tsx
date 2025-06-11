@@ -27,6 +27,7 @@ const ClientOnlyPlot = ({ data, layout, className }: ClientOnlyPlotProps) => {
       }
     };
     window.addEventListener('resize', handleResize);
+    const currentPlotRef = plotRef.current;
     return () => {
       window.removeEventListener('resize', handleResize);
       if (plotRef.current) {
