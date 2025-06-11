@@ -1,4 +1,15 @@
 // frontend/benchtop-nextjs/src/types/plotly.d.ts
+
+// This declaration handles the 'plotly.js-basic-dist-min' module.
+declare module 'plotly.js-basic-dist-min' {
+  // It tells TypeScript that the types for this small bundle are the same
+  // as the official, full 'plotly.js' types.
+  import * as Plotly from 'plotly.js';
+  export default Plotly;
+}
+
+// This declaration handles the 'react-plotly.js' wrapper module.
+// It is a more robust version of the file you already had.
 declare module 'react-plotly.js' {
     import * as Plotly from 'plotly.js';
     import * as React from 'react';
@@ -9,38 +20,11 @@ declare module 'react-plotly.js' {
         config?: Partial<Plotly.Config>;
         useResizeHandler?: boolean;
         style?: React.CSSProperties;
+        // This is the key prop to pass our specific plotly bundle
+        plotly?: any; 
         onInitialized?: (figure: { data: Plotly.Data[]; layout: Partial<Plotly.Layout> }, graphDiv: HTMLElement) => void;
         onUpdate?: (figure: { data: Plotly.Data[]; layout: Partial<Plotly.Layout> }, graphDiv: HTMLElement) => void;
-        onPurge?: (figure: { data: Plotly.Data[]; layout: Partial<Plotly.Layout> }, graphDiv: HTMLElement) => void;
-        onError?: (error: Error) => void;
-        onAfterExport?: () => void;
-        onAfterPlot?: () => void;
-        onAnimated?: () => void;
-        onAnimatingFrame?: (event: Plotly.FrameAnimationEvent) => void;
-        onAnimationInterrupted?: () => void;
-        onAutoSize?: () => void;
-        onBeforeExport?: () => void;
-        onButtonClicked?: (event: Plotly.ButtonClickEvent) => void;
-        onClick?: (event: Plotly.PlotMouseEvent) => void;
-        onClickAnnotation?: (event: Plotly.AnnotationClickEvent) => void;
-        onDeselect?: () => void;
-        onDoubleClick?: () => void;
-        onFramework?: () => void;
-        onHover?: (event: Plotly.PlotHoverEvent) => void;
-        onLegendClick?: (event: Plotly.LegendClickEvent) => boolean;
-        onLegendDoubleClick?: (event: Plotly.LegendClickEvent) => boolean;
-        onRelayout?: (event: Plotly.RelayoutEvent) => void;
-        onRestyle?: (event: Plotly.PlotRestyleEvent) => void;
-        onRedraw?: () => void;
-        onSelected?: (event: Plotly.PlotSelectionEvent) => void;
-        onSelecting?: (event: Plotly.PlotSelectionEvent) => void;
-        onSliderChange?: (event: Plotly.SliderChangeEvent) => void;
-        onSliderEnd?: (event: Plotly.SliderChangeEvent) => void;
-        onSliderStart?: (event: Plotly.SliderChangeEvent) => void;
-        onTransitioning?: () => void;
-        onTransitionInterrupted?: () => void;
-        onUnhover?: (event: Plotly.PlotHoverEvent) => void;
-        onWebGlContextLost?: () => void;
+        [key: string]: any; // Allow other props
     }
 
     const Plot: React.FC<PlotProps>;

@@ -1,14 +1,15 @@
+// frontend/benchtop-nextjs/tailwind.config.ts
 import type { Config } from "tailwindcss"
 
-const config = {
-  darkMode: ["class"],
+const config: Config = {
+  darkMode: "class", // --- FIX: Should be the string "class", not an array ["class"]
   content: [
-    './pages/**/*.{ts,tsx}', // If you ever use the 'pages' directory
-    './components/**/*.{ts,tsx}', // For your custom components
-    './app/**/*.{ts,tsx}', // For Next.js App Router
-    './src/**/*.{ts,tsx}', // General catch-all if your components are deeper in src
-  ],
-  prefix: "", // No prefix is standard for shadcn/ui
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+	],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -60,12 +61,12 @@ const config = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" }, // Ensure height is a string "0"
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" }, // Ensure height is a string "0"
+          to: { height: "0" },
         },
       },
       animation: {
@@ -74,7 +75,7 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")], // Requires `npm install -D tailwindcss-animate`
-} satisfies Config
+  plugins: [require("tailwindcss-animate")],
+}
 
 export default config
