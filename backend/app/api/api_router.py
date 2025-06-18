@@ -10,6 +10,7 @@ from app.api.endpoints.core import (
     analysis_run_router
 )
 from app.api.endpoints.tools.bulk_rna_seq import volcano_plot_router
+from app.api.endpoints.tools.bulk_rna_seq import pca_plot_router
 
 api_router = APIRouter()
 
@@ -28,6 +29,12 @@ api_router.include_router(
     volcano_plot_router.router, 
     prefix="/analyses/volcano-plot", 
     tags=["Analyses - Volcano Plot"]
+)
+
+api_router.include_router(
+    pca_plot_router.router, 
+    prefix="/analyses/pca-plot", 
+    tags=["Analyses - PCA Plot"]
 )
 
 # Example for the future: When we add a PCA plot tool, its router will be added here.

@@ -54,6 +54,13 @@ export function submitVolcanoAnalysis(submissionData: any) {
   });
 }
 
+export function submitPcaAnalysis(submissionData: any) {
+  return fetchApi('/api/analyses/pca-plot/submit', {
+    method: 'POST',
+    body: JSON.stringify(submissionData),
+  });
+}
+
 export function getAnalysisRunStatus(analysisRunId: string) {
   return fetchApi(`/api/analysis-runs/${analysisRunId}`);
 }
