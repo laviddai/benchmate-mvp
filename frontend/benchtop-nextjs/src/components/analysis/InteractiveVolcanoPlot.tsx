@@ -8,10 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Download, Palette, LineChart, Info, RotateCcw } from 'lucide-react';
+import { Download, Palette, Info, RotateCcw } from 'lucide-react';
 
 import { type VolcanoPlotData, type VolcanoPoint } from '@/types/analysis';
 
@@ -27,6 +26,7 @@ interface PlotState {
     xAxisMax: number | null;
     topNUp: number;
     topNDown: number;
+    showPlotBorder: boolean; // 1. ADDED: New state property for the border
 }
 
 const CustomCheckbox = ({ label, checked, onCheckedChange }: { label: string, checked: boolean, onCheckedChange: (checked: boolean) => void }) => (
@@ -61,6 +61,7 @@ export default function InteractiveVolcanoPlot({ plotData }: { plotData: Volcano
         xAxisMax: null,
         topNUp: 0,
         topNDown: 0,
+        showPlotBorder: false, // 1. ADDED: Initial state set to false
     }), [default_plot_config]);
 
     const [state, setState] = useState<PlotState>(getInitialState);
@@ -102,8 +103,29 @@ export default function InteractiveVolcanoPlot({ plotData }: { plotData: Volcano
 
         const plotLayout: Partial<Layout> = {
             title: { text: state.title, x: 0.45, xanchor: 'center', yanchor: 'top', y: 0.95 },
-            xaxis: { title: { text: default_plot_config.x_axis_label }, range: [-finalXAbsMax, finalXAbsMax], gridcolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', zerolinecolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', automargin: true },
-            yaxis: { title: { text: default_plot_config.y_axis_label }, range: [0, finalYMax], gridcolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', zerolinecolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', automargin: true },
+            // 3. ADDED: Properties to control the border based on state
+            xaxis: { 
+                title: { text: default_plot_config.x_axis_label }, 
+                range: [-finalXAbsMax, finalXAbsMax], 
+                gridcolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', 
+                zerolinecolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', 
+                automargin: true,
+                showline: state.showPlotBorder,
+                mirror: state.showPlotBorder,
+                linecolor: 'black',
+                linewidth: 1,
+            },
+            yaxis: { 
+                title: { text: default_plot_config.y_axis_label }, 
+                range: [0, finalYMax], 
+                gridcolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', 
+                zerolinecolor: state.showGridLines ? '#eee' : 'rgba(0,0,0,0)', 
+                automargin: true,
+                showline: state.showPlotBorder,
+                mirror: state.showPlotBorder,
+                linecolor: 'black',
+                linewidth: 1,
+            },
             shapes: state.showThresholdLines ? [
                 { type: 'line', x0: state.fcThreshold, x1: state.fcThreshold, y0: 0, y1: finalYMax, line: { color: 'grey', width: 2, dash: 'dash' } },
                 { type: 'line', x0: -state.fcThreshold, x1: -state.fcThreshold, y0: 0, y1: finalYMax, line: { color: 'grey', width: 2, dash: 'dash' } },
@@ -195,7 +217,6 @@ export default function InteractiveVolcanoPlot({ plotData }: { plotData: Volcano
                             <Label htmlFor="plot-title">Plot Title</Label>
                             <Input id="plot-title" value={state.title} onChange={(e) => handleStateChange('title', e.target.value)} />
                         </div>
-                        {/* FIX: Re-implementing threshold controls with number inputs */}
                         <div className="grid gap-2">
                             <Label htmlFor="fc-threshold-input">Fold Change Threshold</Label>
                             <Input id="fc-threshold-input" type="number" value={state.fcThreshold} onChange={(e) => handleStateChange('fcThreshold', parseFloat(e.target.value) || 0)} step={0.1} />
@@ -215,6 +236,8 @@ export default function InteractiveVolcanoPlot({ plotData }: { plotData: Volcano
                         <div className="grid grid-cols-2 gap-4">
                             <CustomCheckbox label="Threshold Lines" checked={state.showThresholdLines} onCheckedChange={(c: boolean) => handleStateChange('showThresholdLines', c)} />
                             <CustomCheckbox label="Grid Lines" checked={state.showGridLines} onCheckedChange={(c: boolean) => handleStateChange('showGridLines', c)} />
+                            {/* 2. ADDED: The UI checkbox for the border */}
+                            <CustomCheckbox label="Plot Border" checked={state.showPlotBorder} onCheckedChange={(c: boolean) => handleStateChange('showPlotBorder', c)} />
                         </div>
                         <div className="grid grid-cols-3 gap-2 items-center">
                             <Label>Colors:</Label>
