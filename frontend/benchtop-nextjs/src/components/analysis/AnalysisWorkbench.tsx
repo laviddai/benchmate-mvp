@@ -9,60 +9,49 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-// --- MODIFIED: Import the new submitPcaAnalysis function ---
-import { uploadAndCreateDataset, submitVolcanoAnalysis, submitPcaAnalysis, getAnalysisRunStatus, getPresignedUrl, getJsonFromS3, createProject } from '@/lib/api';
-// --- MODIFIED: Import the new PCAPlotData type ---
-import { type AnalysisPlotData, type VolcanoPlotData, type PCAPlotData } from '@/types/analysis';
 
-// --- MODIFIED: Dynamically import the new PCA plot component ---
-const InteractiveVolcanoPlot = dynamic(
-  () => import('@/components/analysis/InteractiveVolcanoPlot'),
-  { 
-    ssr: false,
-    loading: () => <div className="text-center p-4">Loading interactive plot...</div> 
-  }
-);
-const InteractivePCAPlot = dynamic(
-  () => import('@/components/analysis/InteractivePCAPlot'),
-  {
-    ssr: false,
-    loading: () => <div className="text-center p-4">Loading interactive plot...</div>
-  }
-);
-// --- END MODIFICATION ---
+// --- MODIFIED: Imports are now cleaner due to re-exporting from lib/api.ts ---
+import { uploadAndCreateDataset, getAnalysisRunStatus, getPresignedUrl, getJsonFromS3, createProject } from '@/lib/api';
+import { type AnalysisPlotData } from '@/types/analysis.types';
+import { type VolcanoPlotData } from '@/types/volcano.types';
+import { type PCAPlotData } from '@/types/pca.types';
+import { type HeatmapData } from '@/types/heatmap.types';
 
+// --- MODIFIED: Import the new tool-specific components ---
+import { VolcanoAnalysis } from './tools/volcano/VolcanoAnalysis';
+import { PcaAnalysis } from './tools/pca/PcaAnalysis';
+import { HeatmapAnalysis } from './tools/heatmap/HeatmapAnalysis';
+
+const InteractiveVolcanoPlot = dynamic(() => import('@/components/analysis/InteractiveVolcanoPlot'), { ssr: false });
+const InteractivePCAPlot = dynamic(() => import('@/components/analysis/InteractivePCAPlot'), { ssr: false });
+const InteractiveHeatmap = dynamic(() => import('@/components/analysis/InteractiveHeatmap'), { ssr: false });
+
+// --- These interfaces remain the same ---
 interface Dataset {
     id: string;
     name: string;
 }
-
 interface AnalysisRun {
     id:string;
     status: 'pending' | 'running' | 'completed' | 'failed';
-    output_artifacts?: {
-        results_json_s3_path?: string;
-        [key: string]: any;
-    };
+    output_artifacts?: { results_json_s3_path?: string; [key: string]: any; };
     error_message?: string;
 }
 
 export function AnalysisWorkbench() {
+    // --- State management remains the same ---
     const [projectId, setProjectId] = useState<string | null>(null);
     const [isCreatingProject, setIsCreatingProject] = useState(true);
-
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [createdDataset, setCreatedDataset] = useState<Dataset | null>(null);
-    
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [analysisRun, setAnalysisRun] = useState<AnalysisRun | null>(null);
     const [pollingIntervalId, setPollingIntervalId] = useState<NodeJS.Timeout | null>(null);
-    
     const [plotData, setPlotData] = useState<AnalysisPlotData>(null);
     const [isLoadingResults, setIsLoadingResults] = useState(false);
-
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // --- All useEffect and helper functions remain largely the same ---
     useEffect(() => {
         const initializeProject = async () => {
             try {
@@ -76,40 +65,28 @@ export function AnalysisWorkbench() {
                 setIsCreatingProject(false);
             }
         };
-
         initializeProject();
     }, []);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
-            // --- MODIFIED: Reset state when a new file is chosen ---
             setFile(event.target.files[0]);
             setCreatedDataset(null);
             setAnalysisRun(null);
             setPlotData(null);
             if (pollingIntervalId) stopPolling(pollingIntervalId);
-            // --- END MODIFICATION ---
         }
     };
 
     const handleUpload = async () => {
-        if (!projectId) {
-            toast.error("Project is not initialized. Please wait or refresh.");
-            return;
-        }
-        if (!file) {
-            toast.error("Please select a file first.");
-            return;
-        }
+        if (!projectId || !file) return;
         setIsUploading(true);
         toast.info("Uploading dataset...");
-
         const formData = new FormData();
         formData.append('file', file);
         formData.append('project_id', projectId);
         formData.append('name', file.name);
         formData.append('technique_type', 'bulk_rna_seq');
-
         try {
             const data = await uploadAndCreateDataset(formData);
             setCreatedDataset(data);
@@ -118,51 +95,6 @@ export function AnalysisWorkbench() {
             toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
         } finally {
             setIsUploading(false);
-        }
-    };
-
-    // Generic function to handle starting any analysis
-    const handleRunAnalysis = async (analysisType: 'volcano' | 'pca') => {
-        if (!projectId || !createdDataset) {
-            toast.error("Please create a project and upload a dataset first.");
-            return;
-        }
-
-        setIsSubmitting(true);
-        setPlotData(null);
-        setAnalysisRun(null);
-        if (pollingIntervalId) stopPolling(pollingIntervalId);
-
-        toast.info(`Submitting ${analysisType.toUpperCase()} analysis job...`);
-
-        let submissionFunction;
-        let submissionData;
-
-        if (analysisType === 'volcano') {
-            submissionFunction = submitVolcanoAnalysis;
-            submissionData = {
-                project_id: projectId,
-                primary_input_dataset_id: createdDataset.id,
-                analysis_name: `Volcano Plot for ${createdDataset.name}`,
-            };
-        } else { // PCA
-            submissionFunction = submitPcaAnalysis;
-            submissionData = {
-                project_id: projectId,
-                primary_input_dataset_id: createdDataset.id,
-                analysis_name: `PCA Plot for ${createdDataset.name}`,
-            };
-        }
-
-        try {
-            const run = await submissionFunction(submissionData);
-            setAnalysisRun(run);
-            toast.success("Analysis submitted! Polling for status...");
-            startPolling(run.id);
-        } catch (error) {
-            toast.error(`Submission failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -186,14 +118,20 @@ export function AnalysisWorkbench() {
     const stopPolling = (idToClear: NodeJS.Timeout | null) => {
         if (idToClear) {
             clearInterval(idToClear);
-            if (idToClear === pollingIntervalId) {
-                setPollingIntervalId(null);
-            }
+            if (idToClear === pollingIntervalId) setPollingIntervalId(null);
         }
     };
 
-    const fetchResults = useCallback(async (): Promise<void> => {
-        if (!analysisRun || !analysisRun.output_artifacts?.results_json_s3_path) return;
+    // --- NEW: A single callback function passed to child components ---
+    const handleAnalysisSubmit = (runId: string) => {
+        setPlotData(null); // Clear previous results
+        setAnalysisRun({ id: runId, status: 'pending' }); // Set initial run state
+        toast.success("Analysis submitted! Polling for status...");
+        startPolling(runId);
+    };
+
+    const fetchResults = useCallback(async () => {
+        if (!analysisRun?.output_artifacts?.results_json_s3_path) return;
         setIsLoadingResults(true);
         toast.info("Fetching analysis results...");
         try {
@@ -221,9 +159,7 @@ export function AnalysisWorkbench() {
     }, [analysisRun?.status, analysisRun?.error_message, fetchResults]);
 
     useEffect(() => {
-        return () => {
-            if (pollingIntervalId) clearInterval(pollingIntervalId);
-        };
+        return () => { if (pollingIntervalId) clearInterval(pollingIntervalId); };
     }, [pollingIntervalId]);
 
     const getProgress = () => {
@@ -237,7 +173,7 @@ export function AnalysisWorkbench() {
         }
     };
     
-    const isAnalysisRunning = isSubmitting || (!!analysisRun && analysisRun.status !== 'completed' && analysisRun.status !== 'failed');
+    const isAnalysisRunning = !!analysisRun && (analysisRun.status === 'pending' || analysisRun.status === 'running');
 
     return (
         <div className="container mx-auto p-4 md:p-8 space-y-8">
@@ -251,10 +187,7 @@ export function AnalysisWorkbench() {
                 <CardHeader>
                     <CardTitle>Step 1: Upload Data</CardTitle>
                     <CardDescription>
-                        {isCreatingProject 
-                            ? "Initializing project workspace, please wait..." 
-                            : "Select and upload your bulk RNA-seq data file (e.g., CSV, TSV, XLSX)."
-                        }
+                        {isCreatingProject ? "Initializing project workspace..." : "Select and upload your data file."}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row items-center gap-4">
@@ -272,27 +205,37 @@ export function AnalysisWorkbench() {
             <Card>
                 <CardHeader>
                     <CardTitle>Step 2: Run Analysis</CardTitle>
-                    <CardDescription>
-                        Once your data is uploaded, choose an analysis to run.
-                    </CardDescription>
+                    <CardDescription>Once your data is uploaded, choose an analysis to run.</CardDescription>
                 </CardHeader>
-                {/* --- MODIFIED: Add a container for analysis buttons --- */}
                 <CardContent className="flex flex-wrap gap-4">
-                    <Button onClick={() => handleRunAnalysis('volcano')} disabled={!createdDataset || isAnalysisRunning}>
-                        Run Volcano Plot
-                    </Button>
-                    <Button onClick={() => handleRunAnalysis('pca')} disabled={!createdDataset || isAnalysisRunning} variant="secondary">
-                        Run PCA Plot
-                    </Button>
+                    {projectId && createdDataset && (
+                        <>
+                            <VolcanoAnalysis
+                                projectId={projectId}
+                                datasetId={createdDataset.id}
+                                onAnalysisSubmit={handleAnalysisSubmit}
+                                isDisabled={!createdDataset || isAnalysisRunning}
+                            />
+                            <PcaAnalysis
+                                projectId={projectId}
+                                datasetId={createdDataset.id}
+                                onAnalysisSubmit={handleAnalysisSubmit}
+                                isDisabled={!createdDataset || isAnalysisRunning}
+                            />
+                            <HeatmapAnalysis
+                                projectId={projectId}
+                                datasetId={createdDataset.id}
+                                onAnalysisSubmit={handleAnalysisSubmit}
+                                isDisabled={!createdDataset || isAnalysisRunning}
+                            />
+                        </>
+                    )}
                 </CardContent>
-                {/* --- END MODIFICATION --- */}
             </Card>
 
             {analysisRun && (
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Step 3: Monitor & View Results</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Step 3: Monitor & View Results</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex items-center gap-4">
                             <Label>Status:</Label>
@@ -304,14 +247,9 @@ export function AnalysisWorkbench() {
                         
                         {isLoadingResults && <p>Loading results...</p>}
 
-                        {/* --- MODIFIED: Conditional rendering for different plot types --- */}
-                        {plotData?.plot_type === 'volcano' && (
-                            <InteractiveVolcanoPlot plotData={plotData as VolcanoPlotData} />
-                        )}
-                        {plotData?.plot_type === 'pca' && (
-                            <InteractivePCAPlot plotData={plotData as PCAPlotData} />
-                        )}
-                        {/* --- END MODIFICATION --- */}
+                        {plotData?.plot_type === 'volcano' && <InteractiveVolcanoPlot plotData={plotData as VolcanoPlotData} />}
+                        {plotData?.plot_type === 'pca' && <InteractivePCAPlot plotData={plotData as PCAPlotData} />}
+                        {plotData?.plot_type === 'heatmap' && <InteractiveHeatmap plotData={plotData as HeatmapData} />}
 
                         {analysisRun.status === 'failed' && (
                             <div className="text-red-600 bg-red-50 p-4 rounded-md">

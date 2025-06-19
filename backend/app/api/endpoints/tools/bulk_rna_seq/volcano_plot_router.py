@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.db.session import get_db
-from app.celery_worker import run_volcano_plot_analysis as run_volcano_task # Import Celery task
+from app.tasks.volcano_task import run_volcano_plot_analysis as run_volcano_task # Import Celery task
 from app.core.config import settings
 
 # Import the placeholder for current user (replace with actual auth later)

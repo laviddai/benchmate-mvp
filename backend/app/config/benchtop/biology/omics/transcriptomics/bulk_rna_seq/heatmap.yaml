@@ -1,0 +1,48 @@
+# backend/app/config/benchtop/biology/omics/transcriptomics/bulk_rna_seq/heatmap.yaml
+
+expected_input:
+  excluded_metadata_columns:
+    - "logfc"
+    - "pvalue"
+    - "fdr"
+    - "logcpm"
+    - "f"
+    - "t"
+    - "b"
+
+# --- Default parameters for the Heatmap generation ---
+parameters:
+  # --- Gene Selection / Filtering ---
+  gene_selection_method: "top_n_variable"
+  top_n_genes: 50
+  de_logfc_threshold: 1.0
+  de_pvalue_threshold: 0.05
+  # gene_list: will be provided at runtime by the user.
+
+  # --- NEW: Normalization & Scaling ---
+  # These steps happen BEFORE scaling.
+  # 'cpm' could be an option if we can reliably detect raw counts. For now, log2 is safest.
+  normalization_method: "log2_transform" # Options: "log2_transform", "none"
+  # This happens AFTER normalization.
+  scaling_method: "z_score_row" # Options: "z_score_row", "none"
+
+  # --- Clustering Parameters ---
+  cluster_genes: true
+  cluster_samples: true
+  clustering_method: "average" # Options: 'average', 'complete', 'ward'
+  distance_metric: "euclidean" # Options: 'euclidean', 'correlation'
+
+# --- Default settings for the plot appearance ---
+default_plot_config:
+  title: "Gene Expression Heatmap"
+  color_map: "RdBu_r" # Red=High, Blue=Low
+  show_gene_labels: true
+  show_sample_labels: true
+  show_sample_annotation: true
+  # --- NEW: Hover template for rich tooltips ---
+  hover_template: "Gene: %{y}<br>Sample: %{x}<br>Value: %{z:.2f}<extra></extra>"
+
+# --- Tool Metadata ---
+metadata:
+  tool_id: "benchmate_heatmap_v1"
+  version: "1.0.0"

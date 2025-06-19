@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Download, Palette, Info, RotateCcw } from 'lucide-react';
 
-import { type VolcanoPlotData, type VolcanoPoint } from '@/types/analysis';
+import { type VolcanoPlotData, type VolcanoPoint } from '@/types/volcano.types';
 
 interface PlotState {
     title: string;

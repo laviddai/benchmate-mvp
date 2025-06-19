@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from app import crud, models, schemas
 from app.db.session import get_db
-from app.celery_worker import run_pca_plot_analysis as run_pca_task
+from app.tasks.pca_task import run_pca_plot_analysis as run_pca_task
 from app.core.config import settings
 from app.api.endpoints.core.project_router import get_current_active_user_placeholder
 

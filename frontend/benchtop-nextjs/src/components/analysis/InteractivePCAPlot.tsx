@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Download, Info, RotateCcw } from 'lucide-react';
 
-import { type PCAPlotData, type PCAPoint } from '@/types/analysis';
+import { type PCAPlotData, type PCAPoint } from '@/types/pca.types';
 
 // A state interface to hold all user-customizable plot settings
 interface PlotState {
