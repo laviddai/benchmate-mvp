@@ -4,16 +4,12 @@ import numpy as np
 import io
 import os
 import re
-import logging
 from typing import Any, Optional, Dict, List
 
 from pydantic import BaseModel, Field
 from scipy.cluster.hierarchy import linkage, leaves_list
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # --- Pydantic Schema for Parameters ---
 class HeatmapParams(BaseModel):
@@ -65,7 +61,6 @@ def run(file_obj: io.BytesIO, filename: str, params: HeatmapParams, config: dict
     df = df.set_index(df.columns[0])
 
     excluded_cols_lower = {str(c).lower() for c in config.get('expected_input', {}).get('excluded_metadata_columns', [])}
-    logger.info(f"Excluding metadata columns: {excluded_cols_lower}")
     
     sample_columns = [col for col in df.columns if col not in excluded_cols_lower]
     metadata_columns = [col for col in df.columns if col in excluded_cols_lower]
@@ -107,7 +102,6 @@ def run(file_obj: io.BytesIO, filename: str, params: HeatmapParams, config: dict
 
     if matrix_to_plot.empty:
         raise ValueError("No genes remained after filtering. Please check your filtering criteria.")
-    logger.info(f"Gene selection method '{params.gene_selection_method}' resulted in {len(matrix_to_plot)} genes.")
 
     if params.normalization_method == "log2_transform":
         matrix_to_plot = np.log2(matrix_to_plot + 1)
@@ -129,7 +123,7 @@ def run(file_obj: io.BytesIO, filename: str, params: HeatmapParams, config: dict
     
     final_matrix = matrix_to_plot.loc[gene_order, sample_order]
     final_sample_names = [original_columns_map[col] for col in final_matrix.columns]
-
+    
     plot_data = {
         "heatmap_values": final_matrix.values.tolist(),
         "gene_labels": final_matrix.index.tolist(),
@@ -144,21 +138,16 @@ def run(file_obj: io.BytesIO, filename: str, params: HeatmapParams, config: dict
         "parameters_used": params.model_dump()
     }
     
-    # --- CHANGE: Build the config object explicitly to match the frontend type ---
     plot_config_from_yaml = config.get("default_plot_config", {})
     default_plot_config = {
-        "title": params.analysis_name,
-        "subtitle": selection_reason, # Expose subtitle separately as requested
+        "title": params.analysis_name, "subtitle": selection_reason,
         "color_map": plot_config_from_yaml.get("color_map", "RdBu_r"),
         "show_gene_labels": plot_config_from_yaml.get("show_gene_labels", True),
         "show_sample_labels": plot_config_from_yaml.get("show_sample_labels", True),
         "show_sample_annotation": plot_config_from_yaml.get("show_sample_annotation", True),
         "hover_template": plot_config_from_yaml.get("hover_template", "Value: %{z:.2f}")
     }
-
     return {
-        "plot_type": "heatmap",
-        "plot_data": plot_data,
-        "summary_stats": summary_stats,
-        "default_plot_config": default_plot_config
+        "plot_type": "heatmap", "plot_data": plot_data,
+        "summary_stats": summary_stats, "default_plot_config": default_plot_config
     }

@@ -1,8 +1,8 @@
 // frontend/benchtop-nextjs/src/components/analysis/InteractiveHeatmap.tsx
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import Plotly from 'plotly.js-basic-dist-min';
+import React, { useState, useMemo, useCallback, useRef } from 'react'; // Removed useEffect as it's not directly used here anymore
+import dynamic from 'next/dynamic';
 import { type Layout, type Data } from 'plotly.js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -12,10 +12,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, RotateCcw, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import Plotly from 'plotly.js-dist-min'; // Import Plotly for the download function
 
 import { type HeatmapData } from '@/types/heatmap.types';
 
-// A state interface to hold all user-customizable plot settings
+const ClientOnlyPlot = dynamic(() => import('@/components/analysis/ClientOnlyPlot'), {
+  ssr: false,
+  loading: () => <div className="h-[600px] w-full flex items-center justify-center">Loading Plot...</div>,
+});
+
 interface PlotState {
     title: string;
     colorMap: string;
@@ -40,6 +45,7 @@ const InfoTooltip = ({ content }: { content: string }) => (
 );
 
 export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData }) {
+    // --- FIX: Create a ref that can be forwarded to the ClientOnlyPlot ---
     const plotRef = useRef<HTMLDivElement>(null);
     const { plot_data, default_plot_config, summary_stats } = plotData;
 
@@ -56,8 +62,12 @@ export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData
         setState(prevState => ({ ...prevState, [key]: value }));
     };
 
-    const { trace, layout } = useMemo(() => {
-        const heatmapTrace: Partial<Data> = {
+    const { data, layout } = useMemo(() => {
+        const allValues = plot_data.heatmap_values.flat().filter(v => isFinite(v));
+        const zMin = Math.min(...allValues);
+        const zMax = Math.max(...allValues);
+
+        const trace: Data = {
             z: plot_data.heatmap_values,
             x: plot_data.sample_labels,
             y: plot_data.gene_labels,
@@ -65,46 +75,25 @@ export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData
             colorscale: state.colorMap,
             showscale: true,
             hovertemplate: default_plot_config.hover_template,
+            zmin: zMin,
+            zmax: zMax,
         };
 
         const plotLayout: Partial<Layout> = {
-            title: { 
-                text: `${state.title}<br><sub>${summary_stats.gene_selection_reason}</sub>`,
-                x: 0.5, xanchor: 'center', yanchor: 'top', y: 0.95 
-            },
-            xaxis: {
-                tickangle: -45,
-                showticklabels: state.showSampleLabels,
-                categoryorder: 'array',
-                categoryarray: plot_data.sample_labels,
-            },
-            yaxis: {
-                showticklabels: state.showGeneLabels,
-                automargin: true,
-                categoryorder: 'array',
-                categoryarray: plot_data.gene_labels,
-            },
+            title: { text: `${state.title}<br><sub>${summary_stats.gene_selection_reason}</sub>`, x: 0.5, xanchor: 'center', yanchor: 'top', y: 0.95 },
+            xaxis: { tickangle: -45, showticklabels: state.showSampleLabels, categoryorder: 'array', categoryarray: plot_data.sample_labels },
+            yaxis: { showticklabels: state.showGeneLabels, automargin: true, categoryorder: 'array', categoryarray: plot_data.gene_labels },
             autosize: true,
             margin: { l: state.showGeneLabels ? 120 : 50, r: 30, t: 90, b: state.showSampleLabels ? 120 : 50 },
         };
 
-        return { trace: heatmapTrace, layout: plotLayout };
+        return { data: [trace], layout: plotLayout };
     }, [state, plot_data, default_plot_config, summary_stats]);
-
-    useEffect(() => {
-        if (plotRef.current) {
-            if (!Array.isArray(plot_data.heatmap_values) || !Array.isArray(plot_data.heatmap_values[0])) {
-                console.error("Heatmap values must be a 2D array:", plot_data.heatmap_values);
-                return;
-            }
-            Plotly.react(plotRef.current, [trace], layout, { responsive: true, displaylogo: false });
-        }
-    }, [trace, layout, plot_data]);
-
+    
+    // --- FIX: Re-enable download functionality ---
     const downloadPlot = useCallback(async () => {
         if (plotRef.current) {
             const dataUrl = await Plotly.toImage(plotRef.current, { format: 'png', width: 1200, height: 1000, scale: 2 });
-            // --- FIX: Declare the 'link' constant ---
             const link = document.createElement('a');
             link.download = `${state.title.replace(/\s+/g, '_')}.png`;
             link.href = dataUrl;
@@ -129,6 +118,9 @@ export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData
     }, [plot_data]);
 
     const colorMaps = ['RdBu_r', 'Viridis', 'Plasma', 'Inferno', 'Magma', 'Cividis', 'Greys', 'Blues', 'Greens'];
+    
+    // --- FIX: Create a more accurate description ---
+    const cardDescription = `${summary_stats.gene_selection_reason} (${plot_data.gene_labels.length} genes shown).`;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -137,10 +129,10 @@ export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData
                     <Card>
                         <CardHeader>
                             <CardTitle>{state.title}</CardTitle>
-                            <CardDescription>{summary_stats.gene_selection_reason}</CardDescription>
+                            <CardDescription>{cardDescription}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-2">
-                            <div ref={plotRef} className="w-full" style={{ minHeight: '600px' }}></div>
+                            <ClientOnlyPlot ref={plotRef} data={data} layout={layout} style={{width: '100%', height: '600px'}} />
                         </CardContent>
                     </Card>
                 </div>
@@ -177,6 +169,7 @@ export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData
                 <Card>
                     <CardHeader><CardTitle className="flex items-center gap-2"><Download size={20} /> Data & Image</CardTitle></CardHeader>
                     <CardContent className="space-y-2 pt-2">
+                         {/* --- FIX: Re-enable the download buttons --- */}
                          <Button onClick={downloadData} variant="outline" className="w-full">Download Plotted Data</Button>
                          <Button onClick={downloadPlot} className="w-full">Download Plot as PNG</Button>
                     </CardContent>
