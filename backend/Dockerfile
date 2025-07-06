@@ -11,6 +11,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        build-essential \
        libgomp1 \
+       openjdk-17-jdk \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

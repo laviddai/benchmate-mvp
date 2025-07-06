@@ -20,7 +20,8 @@ celery_app = Celery(
     include=[
         "app.tasks.volcano_task",
         "app.tasks.pca_task",
-        "app.tasks.heatmap_task"
+        "app.tasks.heatmap_task",
+        "app.tasks.imaging_task"
         # To add a new tool, you would just add
         # "app.tasks.***_task" to this list.
     ]

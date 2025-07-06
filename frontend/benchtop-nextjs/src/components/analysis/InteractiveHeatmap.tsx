@@ -169,7 +169,6 @@ export default function InteractiveHeatmap({ plotData }: { plotData: HeatmapData
                 <Card>
                     <CardHeader><CardTitle className="flex items-center gap-2"><Download size={20} /> Data & Image</CardTitle></CardHeader>
                     <CardContent className="space-y-2 pt-2">
-                         {/* --- FIX: Re-enable the download buttons --- */}
                          <Button onClick={downloadData} variant="outline" className="w-full">Download Plotted Data</Button>
                          <Button onClick={downloadPlot} className="w-full">Download Plot as PNG</Button>
                     </CardContent>

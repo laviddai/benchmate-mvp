@@ -10,6 +10,7 @@ from app.api.endpoints.core import (
     analysis_run_router
 )
 from app.api.endpoints.tools.bulk_rna_seq import volcano_plot_router, pca_plot_router, heatmap_router
+from app.api.endpoints.tools.imaging.filters import gaussian_blur_router
 
 api_router = APIRouter()
 
@@ -44,6 +45,14 @@ api_router.include_router(
     tags=["Analyses - Heatmap"]
 )
 # --- End of Bulk RNA Seq ---
+
+# --- Start of Imaging ---
+api_router.include_router(
+    gaussian_blur_router.router,
+    prefix="/analyses/imaging/filters/gaussian-blur",
+    tags=["Analyses - Imaging"]
+)
+# --- End of Imaging ---
 
 # Example for the future: When we add a plot tool, its router will be added here.
 # from app.api.endpoints.tools.bulk_rna_seq import pca_plot_router

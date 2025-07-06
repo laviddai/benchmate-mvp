@@ -1,0 +1,16 @@
+# backend/app/config/benchtop/biology/imaging/filters/gaussian_blur.yaml
+
+# Defines parameters for the Gaussian Blur filter tool.
+parameters:
+  # Default sigma value for the Gaussian kernel.
+  # A larger sigma results in a stronger blur.
+  sigma: 2.0
+
+# Metadata about the tool itself.
+metadata:
+  tool_id: "benchmate_gaussian_blur_v1"
+  version: "1.0.0"
+  # Human-readable name for the UI
+  name: "Gaussian Blur"
+  # Description for tool selection UI
+  description: "Applies a Gaussian blur filter to an image to reduce noise and detail."

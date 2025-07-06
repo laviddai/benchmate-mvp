@@ -26,6 +26,7 @@ plotnine
 psycopg2-binary
 pydantic-settings
 pyproj
+pyimagej
 pyyaml
 python-dotenv
 python-multipart
@@ -33,6 +34,7 @@ rasterio
 redis
 scikit-learn
 scipy
+scyjava
 seaborn
 scanpy
 statsmodels
