@@ -24,6 +24,20 @@ export function submitHeatmapAnalysis(submissionData: any) {
 }
 // --- End of Bulk RNA Seq ---
 
+// --- NEW: Start of Imaging ---
+export function submitGaussianBlurAnalysis(submissionData: {
+  projectId: string;
+  primary_input_dataset_id: string;
+  sigma: number;
+  analysis_name?: string;
+}) {
+  return fetchApi('/analyses/imaging/filters/gaussian-blur/submit', {
+    method: 'POST',
+    body: JSON.stringify(submissionData),
+  });
+}
+// --- NEW: End of Imaging ---
+
 export function getAnalysisRunStatus(analysisRunId: string) {
   return fetchApi(`/api/analysis-runs/${analysisRunId}`);
 }
