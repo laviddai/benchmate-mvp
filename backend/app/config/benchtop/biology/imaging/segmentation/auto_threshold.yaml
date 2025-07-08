@@ -1,0 +1,34 @@
+# backend/app/config/benchtop/biology/imaging/segmentation/auto_threshold.yaml
+
+# Defines parameters for the Auto Threshold tool.
+parameters:
+  # Default thresholding method. Otsu is a very common and robust choice for
+  # images with bimodal histograms (e.g., bright objects on a dark background).
+  method: "Otsu"
+
+# A list of available automatic thresholding algorithms supported by ImageJ2/Fiji.
+# This list will populate the dropdown in the frontend UI.
+available_methods:
+  - "Otsu"
+  - "Huang"
+  - "MaxEntropy"
+  - "Triangle"
+  - "Yen"
+  - "IsoData"
+  - "Li"
+  - "Mean"
+  - "MinError"
+  - "Minimum"
+  - "Moments"
+  - "Percentile"
+  - "RenyiEntropy"
+  - "Shanbhag"
+
+# Metadata about the tool itself.
+metadata:
+  tool_id: "benchmate_auto_threshold_v1"
+  version: "1.0.0"
+  # Human-readable name for the UI
+  name: "Auto Threshold"
+  # Description for tool selection UI
+  description: "Segments an image into foreground and background using an automatic thresholding algorithm to create a binary image."

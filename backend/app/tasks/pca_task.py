@@ -18,7 +18,7 @@ from app.models.analysis_run import AnalysisStatus
 
 # Import the processor and its Pydantic schema for PCA PLOT
 from app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq import pca_processor
-from app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.pca_processor import PCAParams as ToolPCAParams
+from app.schemas.benchtop.biology.omics.transcriptomics.bulk_rna_seq.pca_schema import PCAParams as ToolPCAParams
 
 # This is needed to ensure the task is registered with the Celery app
 from app.celery_worker import celery_app

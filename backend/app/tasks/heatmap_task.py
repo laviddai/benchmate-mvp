@@ -17,7 +17,7 @@ from app.models.analysis_run import AnalysisStatus
 
 # Import the new heatmap processor and its Pydantic schema
 from app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq import heatmap_processor
-from app.utils.benchtop.biology.omics.transcriptomics.bulk_rna_seq.heatmap_processor import HeatmapParams as ToolHeatmapParams
+from app.schemas.benchtop.biology.omics.transcriptomics.bulk_rna_seq.heatmap_schema import HeatmapParams as ToolHeatmapParams
 
 from app.celery_worker import celery_app
 

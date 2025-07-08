@@ -6,26 +6,15 @@ import re
 import logging
 from typing import Any, Optional, Dict, List
 
-from pydantic import BaseModel, Field
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.decomposition import PCA
 
+from app.schemas.benchtop.biology.omics.transcriptomics.bulk_rna_seq.pca_schema import PCAParams
+
 # Configure logging for debugging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# --- Pydantic Schema for Parameters ---
-class PCAParams(BaseModel):
-    analysis_name: Optional[str] = Field("Principal Component Analysis", description="Name for the analysis run.")
-    grouping_column: Optional[str] = Field(None, description="Column name for grouping/coloring samples.")
-    scale_data: bool = Field(True, description="Whether to scale data before PCA.")
-    n_components: int = Field(10, description="Number of principal components to compute.")
-    pc_x_axis: int = Field(1, description="Principal component for the X-axis.")
-    pc_y_axis: int = Field(2, description="Principal component for the Y-axis.")
-
-    class Config:
-        from_attributes = True
 
 # --- Helper Functions ---
 def load_data(file_obj: Any, file_extension: str) -> pd.DataFrame:

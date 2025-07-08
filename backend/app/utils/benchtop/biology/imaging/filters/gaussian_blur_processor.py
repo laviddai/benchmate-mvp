@@ -3,13 +3,9 @@
 import io
 import numpy as np
 from PIL import Image
-from pydantic import BaseModel, Field
 from typing import Dict, Any
 
-# --- Pydantic Schema for Parameters ---
-# This ensures that the parameters passed to the processor are of the correct type.
-class GaussianBlurParams(BaseModel):
-    sigma: float = Field(..., description="Sigma value for the Gaussian kernel.", gt=0)
+from app.schemas.benchtop.biology.imaging.filters.gaussian_blur_schema import GaussianBlurParams
 
 # --- Main Processor Logic ---
 def run(
